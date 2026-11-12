@@ -25,15 +25,17 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`, `licenseURL()`
 5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
 6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
-7. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
-8. `js/cards.js`: builds `CARDS`
-9. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
-10. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
-11. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
-12. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
-13. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
-14. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
-15. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+7. `js/data/notes.js`: `NOTES`, the built-in reading notes (see “Reading notes”)
+8. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
+9. `js/cards.js`: builds `CARDS`
+10. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
+11. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+12. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
+13. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
+14. `js/notes.js`: the generated notes with no page access: `writeNote()`, `applyNote()`, `deleteNote()`, `noteParas()` (see “Reading notes”)
+15. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
+16. `js/views/*.js`: one `render…()` function per screen (`notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+17. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 
@@ -100,6 +102,16 @@ Flights, trains, hotels and bookings the learner enters on “Your trip”, in `
 - The Claude-hosted copy must be published with the `assets` capability declared next to `db`, `user` and `sample`.
 - `node tools/test-timeline.js` runs the real code with only `claude.use("assets")` stubbed.
 
+## Reading notes
+
+Short history and culture notes for the “Before you go” panel on “Your trip”.
+
+- `NOTES[key] = {title, c, body, source, sourceTitle}` in `js/data/notes.js`, for Taipei, Seoul and Tokyo: 150 to 250 words, paragraphs split by a blank line, summarized from the English Wikipedia article in `source`. The panel shows “Based on the Wikipedia article “…” (CC BY-SA)” with a link. `tools/validate.js` checks length, source URL, typographic quotes and that `c` is a country.
+- A trip card of kind `place` gets a “Write a note” button. `writeNote(card, ask)` (`js/notes.js`) asks for 100 to 200 words as `{body}`, passing the place’s `nat` and `en` as JSON between `<place>` tags with any such tags stripped. It returns `{body, error}` and changes nothing: the reply must be an object with a string `body` between 40 and `NOTE_MAX` (3,000) characters, otherwise the error is `invalid_json`; a rejected request returns its code (`failed` if none). `applyNote(id, body)` saves `state.notes[id] = {body, at}` for a card on the trip; `deleteNote(id)` removes it. A rewrite that fails keeps the old note.
+- Generated notes are labelled as written by Claude from its own knowledge and unchecked, with a “Read more on Wikipedia” link to a Wikipedia search for the English name. The page never fetches Wikipedia. Notes render only stored text, split into `<p>` and escaped with `h()`.
+- `removeTripCard()` deletes the card’s note. `normalize()` keeps a note only if its key is the id of a card in the cleaned `state.trip`, its `body` is a non-empty string of at most `NOTE_MAX`, and `at` is a finite number.
+- Notes use the `trip.busy` flag like the add forms. `node tools/test-notes.js` runs the real code against a scripted model.
+
 ## Asking Claude
 
 `askJSON(prompt, tier)` in `js/ai.js` is the shared entry point; every feature (the batch build, adding a place by hand) passes it to the pure functions in `js/tripcheck.js` as `ask` rather than calling a model itself. `tier` is `"default"` or `"complex"`. It resolves with parsed JSON and rejects with `{code}`; `aiMessage(code)` gives the sentence to show.
@@ -117,10 +129,10 @@ Flights, trains, hotels and bookings the learner enters on “Your trip”, in `
 `state` in `js/core.js`, stored under the `localStorage` key `trip-phrasebook-v1`:
 
 ```js
-{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, updated, trip, hold, itin, timeline }
+{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, updated, trip, hold, itin, timeline, notes }
 ```
 
-- `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.”
+- `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.” `notes`: `{ [tripCardId]: { body, at } }`, see “Reading notes.”
 - `start`, `due`, `day`, `lastDay` are local day numbers from `today()`.
 - `b` is the review box, 1 to 5; gaps are `GAP = [0,1,2,4,8,16]` days.
 - Call `commit()` after changing `state` in response to a user action. It stamps `updated`, saves locally, and syncs when running in Claude.
@@ -146,7 +158,7 @@ Flights, trains, hotels and bookings the learner enters on “Your trip”, in `
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js` and `test-timeline.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js` and `test-notes.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.

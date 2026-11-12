@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -172,6 +172,27 @@ else{
       if(typeof e.lit!=="string"||!e.lit.trim())err(at+": lit must be a non-empty string");
       else{if(e.lit.length>60)err(at+": lit is over 60 characters");if(STRAIGHT.test(e.lit))err(at+": use curly quotes (’ “ ”) in lit")}
     }
+  });
+}
+
+// built-in reading notes
+if(!D.NOTES||typeof D.NOTES!=="object")err("js/data/notes.js must be loaded in index.html and define NOTES");
+else{
+  const keys=Object.keys(D.NOTES);
+  ["taipei","seoul","tokyo"].forEach(k=>{if(!keys.includes(k))err("NOTES has no entry for "+k)});
+  keys.forEach(key=>{
+    const n=D.NOTES[key],at="NOTES "+key;
+    if(!n||typeof n!=="object"){err(at+": not an object");return}
+    Object.keys(n).forEach(f=>{if(!["title","c","body","source","sourceTitle"].includes(f))err(at+": unknown field "+f)});
+    ["title","body","source","sourceTitle"].forEach(f=>{if(typeof n[f]!=="string"||!n[f].trim())err(at+": "+f+" must be a non-empty string")});
+    if(!D.C[n.c])err(at+": c must be a country key, not "+n.c);
+    if(typeof n.body==="string"){
+      const words=n.body.trim().split(/\s+/).length;
+      if(words<150||words>250)err(at+": body is "+words+" words, needs 150 to 250");
+      if(/\n{3,}/.test(n.body)||/^\s|\s$/.test(n.body))err(at+": body must have single blank lines between paragraphs and no outer whitespace");
+    }
+    if(typeof n.source==="string"&&!/^https:\/\/en\.wikipedia\.org\/wiki\/\S+$/.test(n.source))err(at+": source must start with https://en.wikipedia.org/wiki/");
+    if(/['"]/.test((n.title||"")+(n.body||"")+(n.sourceTitle||"")))err(at+": use curly quotes (’ “ ”) in title, body and sourceTitle");
   });
 }
 

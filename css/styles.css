@@ -223,3 +223,11 @@ footer{color:var(--muted);font-size:.82rem;padding:0 0 30px}
 .tl-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tl-two .fld,.tl-form .fld{min-width:0}
 .tl-form input.ta,.tl-form select.ta{min-width:0;max-width:100%}
+.note{border-top:1px solid var(--rule);border-left:5px solid var(--c);padding:12px 0 12px 14px;margin-top:2px;min-width:0}
+.note-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.note-head .e-en{overflow-wrap:anywhere}
+.note-head .e-acts{display:flex;flex-wrap:wrap;gap:8px}
+.note-body{max-width:62ch;margin-top:8px}
+.note-body p{margin:0 0 .8em}
+.note-src{max-width:62ch;margin:4px 0 0;overflow-wrap:anywhere}
+.note-src a{color:var(--ink);font-weight:600}

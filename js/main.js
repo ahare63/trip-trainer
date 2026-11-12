@@ -41,7 +41,8 @@ document.addEventListener("click",e=>{
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
   if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
   if(d.tl){tlAct(d.tl,d.id);return}
-  if(d.tripdel){removeTripCard(d.tripdel);session=null;renderTrip();return}
+  if(d.note){noteAct(d.note,d.id);return}
+  if(d.tripdel){removeTripCard(d.tripdel);delete nv.err[d.tripdel];delete nv.open[d.tripdel];session=null;renderTrip();return}
   if(d.essc){essC=d.essc;renderEssentials();return}
   if(d.essquiz){const cs=essC==="all"?["tw","kr","jp"]:[essC];session={filter:"all",q:shuffle(essList(cs)).map(k=>({k,retry:true})),i:0,shown:false,done:0,practice:true};location.hash="study";return}
 });
