@@ -51,7 +51,8 @@ function renderStudy(){
       ${k.cat==="dish"?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
       ${session.shown?`<div class="note" style="border-top-style:solid"><div class="en" style="margin:0 0 6px">${h(k.en)}</div>${k.cat!=="dish"?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>`}${h(k.note)}</div>`:""}`;
   }else{
-    body=`<div class="ask">How do you say this in ${C[k.c].tongue}?</div><div class="en">${h(k.en)}</div>
+    const sit=situationOf(k);
+    body=`${sit?`<div class="situation">${h(sit)}</div>`:""}<div class="ask">How do you say this in ${C[k.c].tongue}?</div><div class="en">${h(k.en)}</div>
       ${session.shown?`<div style="margin-top:14px">${answer}</div>${k.note?`<div class="note">${h(k.note)}</div>`:""}`:""}`;
   }
   el.innerHTML=`<h2>Today’s cards</h2><div style="margin-top:14px">${chips}</div>
