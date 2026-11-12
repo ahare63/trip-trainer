@@ -23,10 +23,12 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 2. `js/data/tw.js`, `kr.js`, `jp.js`: fill `RAW.tw`, `RAW.kr`, `RAW.jp`
 3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `compose()`, `LETTERS`, `WORDS`
 4. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
-5. `js/cards.js`: builds `CARDS`
-6. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `speak`
-7. `js/views/*.js`: one `render…()` function per screen
-8. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+5. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
+6. `js/cards.js`: builds `CARDS`
+7. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `speak`
+8. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+9. `js/views/*.js`: one `render…()` function per screen
+10. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 

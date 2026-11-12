@@ -13,7 +13,7 @@ Draw the pitch shape of each syllable next to the pinyin on Taiwan cards, so ton
 - New file `js/tones.js` with `toneMarks(rom)`: returns an array with one number per syllable, 1 to 4 for the marked tones and 0 for a toneless syllable. It reads the tone from the diacritic on the vowel (macron 1, acute 2, caron 3, grave 4).
 - `toneSVG(tones)`: returns one small inline SVG: flat high line (1), rising (2), low dip (3), falling (4), short dot (0). Reuse the shapes already drawn in the “Mandarin tones” section of `js/views/scripts.js`.
 - Show it under the romanization for `c === "tw"` cards on the answer side in `js/views/study.js`, and in `js/views/phrasebook.js` and `js/views/essentials.js`.
-- Draw tones exactly as written in `rom`. Tone changes are already reflected there (for example `bú shì`).
+- Draw tones as spoken, not as written. `rom` uses dictionary tones, except that the changes of 一 and 不 are already written (for example `bú shì`). `spokenTones(rom)` applies the rest within each phrase: a third tone before another third tone rises, a third tone before any other syllable stays low (only a final one dips fully), and a light syllable’s pitch depends on the tone before it. `rom` itself is not changed.
 
 ## Done when
 
