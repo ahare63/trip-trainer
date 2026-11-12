@@ -99,7 +99,8 @@ main{padding:28px 0 60px}
 .card .situation{font-size:.9rem;font-weight:600;color:var(--muted);margin-top:22px}
 .card .situation + .ask{margin-top:6px}
 .card .en{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6vw,2.1rem);line-height:1.15;margin-top:4px}
-.nat{font-size:clamp(2.2rem,10vw,3.4rem);line-height:1.2;margin-top:6px;font-weight:600;word-break:keep-all}
+.nat{font-size:clamp(2.2rem,10vw,3.4rem);line-height:1.2;margin-top:6px;font-weight:600}
+.nat[lang="ko"]{word-break:keep-all}
 .say{font-size:1.25rem;font-weight:600;margin-top:8px}
 .say small,.rom small{font-weight:400;font-size:.78rem;color:var(--muted);display:block}
 .rom{font-style:italic;color:var(--muted);margin-top:6px}
@@ -123,6 +124,7 @@ main{padding:28px 0 60px}
 .blk span{margin-right:.1em}
 .breakdown .lit{font-size:.85rem;color:var(--muted);font-style:italic;margin-top:6px}
 .breakdown .btn{margin-top:8px}
+.btn.ghost[aria-pressed="true"],.btn.ghost[aria-expanded="true"]{background:var(--ink);color:var(--paper)}
 
 /* signs: generic plates in the palette, not copies of any real signage */
 .sign{display:inline-block;max-width:100%;padding:4px 14px;line-height:1.25;align-self:flex-start}
