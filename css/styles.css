@@ -113,6 +113,17 @@ main{padding:28px 0 60px}
 .hear{border:1.5px solid var(--c,var(--ink));color:var(--c,var(--ink));background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:600;white-space:nowrap}
 .hear::before{content:"▶ ";font-size:.7em}
 
+/* breakdown: chunks above glosses */
+.breakdown{margin-top:12px}
+.parts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-end}
+.part{display:flex;flex-direction:column;align-items:flex-start;max-width:100%;min-width:0}
+.part .chunk{font-size:1.2rem;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.part .gloss{font-size:.8rem;color:var(--muted);line-height:1.25;overflow-wrap:anywhere}
+.blk{display:inline-block;margin-right:.4em}
+.blk span{margin-right:.1em}
+.breakdown .lit{font-size:.85rem;color:var(--muted);font-style:italic;margin-top:6px}
+.breakdown .btn{margin-top:8px}
+
 /* signs: generic plates in the palette, not copies of any real signage */
 .sign{display:inline-block;max-width:100%;padding:4px 14px;line-height:1.25;align-self:flex-start}
 .sign-board{background:var(--ink);color:var(--paper);border-radius:8px}

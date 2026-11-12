@@ -1,6 +1,13 @@
 "use strict";
 /* ---------- study ---------- */
-let session=null;
+let session=null, studyLetters=false;
+function breakdown(k,letters,toggle){
+  const e=PARTS[k.id];
+  if(!e)return "";
+  const kr=k.c==="kr",lang=C[k.c].hl;
+  const chunk=c=>letters&&kr?[...c].map(ch=>`<span class="blk">${splitHangul(ch).map(l=>`<span>${h(l)}</span>`).join("")}</span>`).join(""):h(c);
+  return `<div class="breakdown"><div class="parts">${e.parts.map(([c,g])=>`<span class="part"><span class="chunk" lang="${lang}">${chunk(c)}</span><span class="gloss">${h(g)}</span></span>`).join("")}</div>${e.lit?`<div class="lit">${h(e.lit)}</div>`:""}${kr?`<button class="btn ghost small" ${toggle} aria-pressed="${letters}">Show letters</button>`:""}</div>`;
+}
 function buildQueue(filter,ahead){
   const t=today(),w=curWeek();
   const ok=k=>filter==="all"||k.c===filter;
@@ -41,13 +48,13 @@ function renderStudy(){
     return;
   }
   const it=session.q[session.i],k=it.k,recog=isRecog(k),isNew=!state.cards[k.id]&&!it.retry;
-  const answer=`<div class="nat" lang="${C[k.c].hl}">${h(k.nat)}</div>
+  const answer=`<div class="nat" lang="${C[k.c].hl}">${h(k.nat)}</div>${breakdown(k,studyLetters,'data-letters="1"')}
     <div class="say"><small>Sounds like</small>${h(k.say)}</div>
     <div class="rom"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`;
   let body;
   if(recog){
     body=`<div class="ask">${isDish(k)?"You see this on a menu. What is it?":"What does this say?"}</div>
-      <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>
+      <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>${session.shown?breakdown(k,studyLetters,'data-letters="1"'):""}
       ${isDish(k)?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
       ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${!isDish(k)?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
   }else{
