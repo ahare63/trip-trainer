@@ -30,7 +30,7 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 9. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
 10. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
 11. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
-12. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `applyTripReport()`, `removeTripCard()`, `resolveHold()`
+12. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
 13. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”)
 14. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
@@ -75,14 +75,16 @@ Cards the learner builds from their own itinerary on the “Your trip” screen.
 - `wk: 0` makes them available from the first day. A `kind: "dish"` card is shown like a course dish.
 - They have no entry in `PHOTOS`, `SIGN_STYLE` or `SITUATION`, and their pinyin is model-written, so `toneLine()` may return nothing. Anything keyed by card id must tolerate a missing entry.
 - Their text comes from a model working from pasted notes. `cleanCard()` checks and caps every field; always go through it (or `cleanList()`) when a card enters `state`.
-- A card joins the deck only through `runTripChecks(text, ask, existingCards, holdCards, onStep)` in `js/tripcheck.js`. It runs, in order: six known-answer translations (more than one miss discards the batch), local checks (script, pronunciation, duplicates), a blind reading by a second model on a different tier, and a comparison of the two readings. It returns a report `{probes, hits, blocked, added, held, out: [{card, why}], dupes, checked, error}` and changes nothing; `applyTripReport()` saves `added` to `state.trip` and `held` (business names the generator was unsure of) to `state.hold`. A rejected request sets `error` and leaves `added` and `held` empty.
+- A card joins the deck only through `runTripChecks(text, ask, existingCards, holdCards, onStep)` in `js/tripcheck.js`. It runs, in order: six known-answer translations (more than one miss discards the batch), local checks (script, pronunciation, duplicates), a blind reading by a second model on a different tier, and a comparison of the two readings. It returns a report `{probes, hits, blocked, added, held, out: [{card, why}], dupes, checked, error}` and changes nothing; `applyTripReport()` saves `added` to `state.trip` and `held` (business names the generator was unsure of) to `state.hold`. A rejected request sets `error` and leaves `added` and `held` empty. The only other way in is `addPlaceByHand()`, below.
 - The pasted notes go to the model as data between `<trip>` tags, with any such tags stripped from the notes first. Keep it that way: never splice the notes into the instructions.
 - `removeTripCard(id)` also deletes the card’s progress. `resolveHold(id, add)` moves a held name into the deck or discards it.
-- `node tools/test-trip.js` runs all of this against a scripted model. Extend it when the checks change.
+- `checkCards(cards, ask, onStep)` is the blind reading plus the comparison, shared by every way a card can join the deck. It takes cards that already passed the local checks and returns `[{ok, why}]`, one per card; it throws if a request is rejected. `runTripChecks()` and `addPlaceByHand()` both call it, so a change to those checks applies everywhere.
+- `addPlaceByHand({c, en, nat}, ask, existingCards, holdCards, onStep)` adds one card from a name the learner pasted in the local script. It refuses before any model call if the script is wrong for the country, the name is empty or over 80 characters, the trip deck holds 150 cards, or the card is a duplicate. The model writes only `rom`, `say` and `note`; if the `nat` it returns differs in any character from what was typed, the result is rejected. The typed text goes to the model as JSON between `<entry>` tags, with any such tags stripped. It resolves `{card, why, error}` (`card` is null unless every check passed; `why` is a sentence to show; `error` is a code for `aiMessage()`) and changes nothing; `applyTripCard()` saves the card to `state.trip`. A passing card is not a guessed name, so it skips the hold list.
+- `node tools/test-trip.js` runs the batch checks and `node tools/test-add.js` runs the one-card paths, each against a scripted model. Extend them when the checks change.
 
 ## Asking Claude
 
-`askJSON(prompt, tier)` in `js/ai.js` is the shared entry point; later features reuse it rather than calling a model themselves. `tier` is `"default"` or `"complex"`. It resolves with parsed JSON and rejects with `{code}`; `aiMessage(code)` gives the sentence to show.
+`askJSON(prompt, tier)` in `js/ai.js` is the shared entry point; every feature (the batch build, adding a place by hand) passes it to the pure functions in `js/tripcheck.js` as `ask` rather than calling a model itself. `tier` is `"default"` or `"complex"`. It resolves with parsed JSON and rejects with `{code}`; `aiMessage(code)` gives the sentence to show.
 
 | | Claude-hosted copy | GitHub Pages |
 |---|---|---|

@@ -1,6 +1,24 @@
 "use strict";
 /* ---------- your trip: cards written from the learner's notes, behind the checks in js/tripcheck.js ---------- */
-const trip={text:null,busy:false,step:"",report:null,err:""};
+const trip={text:null,busy:false,who:"",step:"",report:null,err:"",
+  hand:{c:"kr",en:"",nat:"",err:"",ok:""}};
+const HAND_NAT={tw:"台北君悅酒店",kr:"롯데호텔 서울",jp:"浅草ビューホテル"};
+const TRIP_ONE_STEP={write:"Writing the pronunciation.",read:"A second model is reading it without seeing the English.",compare:"Comparing the two readings."};
+const countryOptions=sel=>Object.keys(C).map(c=>`<option value="${c}"${c===sel?" selected":""}>${C[c].name}</option>`).join("");
+const aiStop=()=>AI.mode==="none"?"unavailable":AI.mode==="key"&&!getKey()?"no_key":"";
+async function addOne(who,f,run){
+  if(trip.busy)return;
+  f.err="";f.ok="";trip.busy=true;trip.who=who;trip.step="Getting ready.";renderTrip();
+  await aiReady;
+  const stop=aiStop();
+  const r=await run(stop?async()=>{throw {code:stop}}:askJSON,s=>{trip.step=TRIP_ONE_STEP[s]||"";renderTrip()});
+  if(r.error)f.err=aiMessage(r.error);
+  else if(!r.card)f.err="Not added. "+r.why;
+  else if(applyTripCard(r)){session=null;f.ok="Added “"+r.card.en+"” to your deck.";f.en="";f.nat=""}
+  else f.err="Not added. "+TRIP_FULL;
+  trip.busy=false;trip.who="";trip.step="";renderTrip();
+}
+function addByHand(){const f=trip.hand;return addOne("hand",f,(ask,step)=>addPlaceByHand({c:f.c,en:f.en,nat:f.nat},ask,CARDS,state.hold,step))}
 const TRIP_STEP={write:"Writing cards for your trip. This can take a minute.",
   read:"A second model is reading each card without seeing the English.",
   compare:"Comparing the two readings."};
@@ -8,9 +26,9 @@ async function buildTrip(){
   if(trip.busy)return;
   const text=(trip.text||"").trim();
   if(text.length<6){trip.err="Add a few places or an itinerary first.";renderTrip();return}
-  trip.busy=true;trip.err="";trip.report=null;trip.step="Getting ready.";renderTrip();
+  trip.busy=true;trip.who="build";trip.err="";trip.report=null;trip.step="Getting ready.";renderTrip();
   await aiReady;
-  let stop=AI.mode==="none"?"unavailable":AI.mode==="key"&&!getKey()?"no_key":"";
+  let stop=aiStop();
   if(!stop){
     if(state.itin!==text){state.itin=text;commit()}
     const rep=await runTripChecks(text,askJSON,CARDS,state.hold,s=>{trip.step=TRIP_STEP[s]||"";renderTrip()});
@@ -18,14 +36,14 @@ async function buildTrip(){
     else{if(applyTripReport(rep))session=null;trip.report=rep}
   }
   if(stop)trip.err=aiMessage(stop);
-  trip.busy=false;trip.step="";renderTrip();
+  trip.busy=false;trip.who="";trip.step="";renderTrip();
 }
 function tripEntry(k,acts,why){return `<div class="entry" data-c="${k.c}"><div><div class="e-en">${h(k.en)} <span class="meta" style="font-weight:400">${C[k.c].name}, ${h(k.kind)}</span></div>
   <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
   ${hearBtn(k.nat,k.c)}${k.note?`<div class="e-note">${h(k.note)}</div>`:""}${why?`<div class="e-why">Left out: ${h(why)}</div>`:""}${acts?`<div class="e-acts">${acts}</div>`:""}</div>`}
 function renderTrip(){
   if(trip.text==null)trip.text=state.itin||"";
-  const r=trip.report;
+  const r=trip.report,hand=trip.hand;
   let rep="";
   if(r){
     rep=`<div class="panel" aria-live="polite"><h3>${r.blocked?"Nothing was added":"Result of the checks"}</h3>`;
@@ -47,11 +65,18 @@ function renderTrip(){
   <p class="lede">Paste an itinerary, or just list places: hotels, restaurants, stations, neighborhoods. Claude writes cards for them, and each card has to pass the checks below before it joins your deck. Come back and add more whenever you book something.</p>
   ${keyBox}
   <div style="margin-top:18px"><textarea class="ta" id="trip-text" aria-label="Your itinerary or list of places" maxlength="4000" ${trip.busy?"disabled":""} placeholder="Taipei, 4 nights, hotel near Zhongshan station&#10;Day trip to Jiufen&#10;Seoul, 5 nights in Hongdae&#10;KTX to Busan, staying by Haeundae Beach&#10;Tokyo, 2 nights in Asakusa">${h(trip.text)}</textarea></div>
-  <div class="row" style="margin-top:12px"><button class="btn" data-build="1" ${trip.busy?"disabled":""}>${trip.busy?"Building…":"Build cards from this"}</button><span class="meta" aria-live="polite">${h(trip.step)}</span></div>
+  <div class="row" style="margin-top:12px"><button class="btn" data-build="1" ${trip.busy?"disabled":""}>${trip.busy?"Building…":"Build cards from this"}</button><span class="meta" aria-live="polite">${trip.who==="build"?h(trip.step):""}</span></div>
   ${trip.err?`<p class="err" role="alert" style="margin-top:10px">${h(trip.err)}</p>`:""}
   ${rep}
   ${state.hold.length?`<div class="panel"><h3>Confirm these names</h3><p class="meta" style="margin-top:6px;max-width:62ch">These are business names Claude wasn’t certain of in the local script. Compare each one with your booking confirmation or a map before adding it.</p>
     ${state.hold.map(k=>tripEntry(k,`<button class="btn small" data-holdadd="${h(k.id)}">It matches, add it</button><button class="btn ghost small" data-holddrop="${h(k.id)}">Discard</button>`)).join("")}</div>`:""}
+  <div class="panel"><h3>Add a place by hand</h3>
+    <p class="meta" style="margin-top:6px;max-width:62ch">Paste a name exactly as it appears on your booking or a map. Claude writes only the pronunciation and never changes the name, so nothing is guessed.</p>
+    <div class="fgrid"><label class="fld">Country<select class="ta" id="hand-c" ${trip.busy?"disabled":""}>${countryOptions(hand.c)}</select></label>
+      <label class="fld">What it is, in English<input class="ta" id="hand-en" maxlength="90" autocomplete="off" placeholder="My hotel in Seoul" value="${h(hand.en)}" ${trip.busy?"disabled":""}></label>
+      <label class="fld">Name in the local script<input class="ta" id="hand-nat" maxlength="80" autocomplete="off" lang="${C[hand.c].hl}" placeholder="${h(HAND_NAT[hand.c])}" value="${h(hand.nat)}" ${trip.busy?"disabled":""}></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn" data-handadd="1" ${trip.busy?"disabled":""}>${trip.busy&&trip.who==="hand"?"Adding…":"Add this place"}</button><span class="meta" aria-live="polite">${trip.who==="hand"?h(trip.step):""}</span></div>
+    ${hand.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(hand.err)}</p>`:""}${hand.ok?`<p class="good" role="status" style="margin-top:10px">${h(hand.ok)}</p>`:""}</div>
   <div class="panel"><h3>Cards from your trip${state.trip.length?` (${state.trip.length})`:""}</h3>
     ${state.trip.length?`<p class="meta" style="margin-top:6px">These appear in Today’s cards alongside the course, and in the phrasebook under “Your trip.”</p>${state.trip.map(k=>tripEntry(k,`<button class="btn ghost small" data-tripdel="${h(k.id)}">Remove</button>`)).join("")}`
       :`<p class="meta" style="margin-top:6px">None yet. Build some from your itinerary above.</p>`}</div>
