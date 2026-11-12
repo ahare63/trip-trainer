@@ -216,7 +216,6 @@ footer{color:var(--muted);font-size:.82rem;padding:0 0 30px}
 .tl-tag.todo{border:1.5px solid var(--warn);color:var(--warn)}
 .tl-ask{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:.92rem;color:var(--warn);font-weight:600}
 .tl-ask span{flex:1 1 100%}
-.tl-vis{flex:1 1 100%;font-size:.8rem}
 .tl-item .e-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .tl-form{border-top:1px solid var(--rule);margin-top:16px;padding-top:14px}
 .tl-form h4{margin:0}
