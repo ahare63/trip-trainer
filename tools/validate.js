@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[]})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[]})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -58,6 +58,24 @@ D.ESS.forEach(r=>Object.keys(D.C).forEach(c=>{
   (r[1][c]||[]).forEach(en=>{const n=D.CARDS.filter(k=>k.c===c&&k.en===en).length;if(n!==1)err("Essentials “"+r[0]+"” ("+c+"): “"+en+"” matches "+n+" cards, needs exactly 1")})}));
 D.LETTERS.forEach(l=>{if((l[4]==="v"?D.MED:D.INIT).indexOf(l[0])<0)err("Hangul letter not in INIT/MED: "+l[0]);if(![1,2,3].includes(l[3]))err("Hangul letter set must be 1 to 3: "+l[0])});
 D.WORDS.forEach(w=>{if(!/^[\uac00-\ud7af]+$/.test(w[0]))err("Decoding word must be Hangul only: "+w[0]);if(![1,2,3].includes(w[3]))err("Decoding word set must be 1 to 3: "+w[0])});
+
+const SITUATION_CATS=["basics","order","num","around","help"];
+const cardIds=new Set(D.CARDS.map(k=>k.id));
+Object.keys(D.SITUATION_BY_CAT).forEach(c=>{if(!D.CATS[c])err("SITUATION_BY_CAT key is not a category: "+c)});
+Object.keys(D.SITUATION).forEach(id=>{if(!cardIds.has(id))err("SITUATION key is not a card id: "+id)});
+D.CARDS.forEach(k=>{
+  const s=D.situationOf(k);
+  if(D.RECOG[k.cat]){if(s!=="")err("Recognition card should have no situation label: "+k.id)}
+  else if(SITUATION_CATS.includes(k.cat)){if(typeof s!=="string"||!s.trim())err("Card has no situation label: "+k.id)}
+});
+const situationLabels=new Set([...Object.values(D.SITUATION_BY_CAT),...Object.values(D.SITUATION)]);
+if(situationLabels.size>10)err("Too many distinct situation labels ("+situationLabels.size+"), at most 10");
+situationLabels.forEach(l=>{
+  if(typeof l!=="string"||!l.trim()){err("Situation label is empty");return}
+  if(l.length>32)err("Situation label over 32 characters: "+l);
+  if(!/^[A-Z]/.test(l)||l.split(" ").slice(1).some(w=>/^[A-Z]/.test(w)))err("Situation label is not sentence case: "+l);
+  if(/\.$/.test(l))err("Situation label ends with a period: "+l);
+});
 
 const per=Object.keys(D.RAW).map(c=>c+" "+D.RAW[c].length).join(", ");
 if(errors.length){console.error(errors.length+" problem(s):\n- "+errors.join("\n- "));process.exit(1)}
