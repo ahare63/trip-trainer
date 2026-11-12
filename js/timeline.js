@@ -9,8 +9,9 @@ const tl={assets:null,busy:false};
 function tlSorted(list){
   return list.map((e,i)=>[e,i]).sort((a,b)=>(a[0].date<b[0].date?-1:a[0].date>b[0].date?1:0)||(a[0].time<b[0].time?-1:a[0].time>b[0].time?1:0)||a[1]-b[1]).map(x=>x[0])}
 const tlFilter=(list,onlyToBook)=>onlyToBook?list.filter(e=>e.status==="to-book"):list;
-/* list must already be sorted; today is "YYYY-MM-DD" */
-function tlSplit(list,today){return {earlier:list.filter(e=>e.date<today),upcoming:list.filter(e=>e.date>=today)}}
+/* list must already be sorted; today is "YYYY-MM-DD". A stay belongs to Earlier only once its end date has passed. */
+const tlOver=(e,today)=>(e.endDate||e.date)<today;
+function tlSplit(list,today){return {earlier:list.filter(e=>tlOver(e,today)),upcoming:list.filter(e=>!tlOver(e,today))}}
 const tlNextUp=(list,today)=>list.find(e=>e.date>=today)||null;
 const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 

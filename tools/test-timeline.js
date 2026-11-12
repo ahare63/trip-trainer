@@ -38,11 +38,13 @@ const TODAY="2026-11-12";
 
   /* ===== earlier / next up ===== */
   {
-    const list=D.tlSorted([E("2026-11-10","past flight"),E("2026-11-11","past hotel",{kind:"hotel",endDate:"2026-11-15"}),
+    const list=D.tlSorted([E("2026-11-10","past flight"),E("2026-11-08","past hotel",{kind:"hotel",endDate:"2026-11-11"}),
+      E("2026-11-11","current hotel",{kind:"hotel",endDate:"2026-11-15"}),
       E("2026-11-12","today untimed"),E("2026-11-12","today train",{time:"09:00"}),E("2026-12-01","later")]);
     const sp=D.tlSplit(list,TODAY);
-    eq(titles(sp.earlier),"past flight | past hotel","entries before today are Earlier");
-    eq(titles(sp.upcoming),"today untimed | today train | later","today and later are not Earlier");
+    eq(titles(sp.earlier),"past hotel | past flight","entries that ended before today are Earlier");
+    eq(titles(sp.upcoming),"current hotel | today untimed | today train | later","a stay still going today is not Earlier, nor is today or later");
+    eq(titles(D.tlSplit(list,"2026-11-15").earlier),"past hotel | past flight | today untimed | today train","a stay is still shown on its last day");
     eq(D.tlNextUp(list,TODAY).title,"today untimed","next up is the first entry today or later");
     eq(D.tlNextUp(list,"2026-11-13").title,"later","next up moves on when today moves on");
     eq(D.tlNextUp(list,"2027-01-01"),null,"nothing is next up when everything is past");
