@@ -31,8 +31,9 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 10. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
 11. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
 12. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
-13. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”)
-14. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+13. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
+14. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+15. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 
@@ -84,6 +85,21 @@ Cards the learner builds from their own itinerary on the “Your trip” screen.
 - The “Your trip” view runs both forms through `addOne()` in `js/views/trip.js`: it passes `askJSON` (or a function that rejects with `unavailable` / `no_key`, so refusals that need no model still show their own message first), shows `why` or `aiMessage(error)`, and calls `applyTripCard()`. One `trip.busy` flag disables every button and field while any request runs. The phrasebook’s “Nothing matches” message links to the quick-add box.
 - `node tools/test-trip.js` runs the batch checks and `node tools/test-add.js` runs the one-card paths, each against a scripted model. Extend them when the checks change.
 
+## Trip timeline
+
+Flights, trains, hotels and bookings the learner enters on “Your trip”, in `state.timeline`. They are not cards and never become cards.
+
+```js
+{ id: "tl-xxxxxxxx", date: "YYYY-MM-DD", time: "HH:MM" | "", endDate: "" | "YYYY-MM-DD", kind: "flight"|"train"|"bus"|"hotel"|"activity"|"other",
+  title, where, status: "booked" | "to-book", link: "" | "http(s) URL", file: "" | assetId, note }
+```
+
+- `cleanEntry()` and `cleanTimeline()` (in `js/core.js`, called by `normalize()`) drop entries with no real date or no title, cap strings, and drop any link that is not `http:` or `https:` or is over 500 characters. At most 200 entries.
+- Ordering, the “To book” filter, “Earlier” and “Next up” are pure functions in `js/timeline.js` that take `today` as a `YYYY-MM-DD` string (`todayISO()` supplies it). An entry is Earlier once its `endDate` (or its `date`, if it has none) is before today, so a hotel stay stays in view until it ends. “Next up” is the first entry of the visible list whose `date` is today or later. `tlSave(fields, id)` validates the form (refusing bad links with a message) and saves.
+- Attachments exist only in the Claude-hosted copy. `tlAssetsInit()` sets `tl.assets` to the `claude.use("assets")` namespace, or null (GitHub Pages, no permission), in which case the attach control is hidden. Only the asset id is stored on the entry; the file is served at `"/_blob/" + id`. PDF, PNG and JPEG, at most 20 MiB. `tlAttach` uploads first, stores the id, then deletes the old asset when replacing. `tlDropFile` and `tlDelete` delete the asset first and keep the entry if that fails. Assets are deleted only by these functions, called from a learner’s confirmed click; never on load, normalize or sync.
+- The Claude-hosted copy must be published with the `assets` capability declared next to `db`, `user` and `sample`.
+- `node tools/test-timeline.js` runs the real code with only `claude.use("assets")` stubbed.
+
 ## Asking Claude
 
 `askJSON(prompt, tier)` in `js/ai.js` is the shared entry point; every feature (the batch build, adding a place by hand) passes it to the pure functions in `js/tripcheck.js` as `ask` rather than calling a model itself. `tier` is `"default"` or `"complex"`. It resolves with parsed JSON and rejects with `{code}`; `aiMessage(code)` gives the sentence to show.
@@ -101,10 +117,10 @@ Cards the learner builds from their own itinerary on the “Your trip” screen.
 `state` in `js/core.js`, stored under the `localStorage` key `trip-phrasebook-v1`:
 
 ```js
-{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, updated, trip, hold, itin }
+{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, updated, trip, hold, itin, timeline }
 ```
 
-- `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters.
+- `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.”
 - `start`, `due`, `day`, `lastDay` are local day numbers from `today()`.
 - `b` is the review box, 1 to 5; gaps are `GAP = [0,1,2,4,8,16]` days.
 - Call `commit()` after changing `state` in response to a user action. It stamps `updated`, saves locally, and syncs when running in Claude.
@@ -130,7 +146,7 @@ Cards the learner builds from their own itinerary on the “Your trip” screen.
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js` and `test-timeline.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.
