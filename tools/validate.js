@@ -10,9 +10,9 @@ const errors=[],err=m=>errors.push(m);
 for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a missing file: "+s);
 
 // load the data files and the card builder in a sandbox
-const dataFiles=srcs.filter(s=>s.startsWith("js/data/")).concat("js/cards.js");
+const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[]})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -36,6 +36,19 @@ for(const c of Object.keys(D.RAW)){
 }
 D.CARDS.forEach(k=>{if(ids.has(k.id))err("Duplicate card id: "+k.id);ids.add(k.id)});
 const pairs={};D.CARDS.forEach(k=>{const p=k.c+"|"+k.cat+"|"+k.en;if(pairs[p])err("Two cards share country, category and English text: "+p);pairs[p]=1});
+const HAN_G=/[\u4e00-\u9fff]/g;
+D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
+  const n=(k.nat.match(HAN_G)||[]).length,at="tw “"+k.en+"” ("+k.rom+")";
+  let t,s;try{t=D.toneMarks(k.rom);s=D.spokenTones(k.rom)}catch(e){err(at+": "+e.message);return}
+  if(t.length!==n)err(at+": "+t.length+" syllable(s) in pinyin but "+n+" Chinese character(s)");
+  if(s.length!==t.length)err(at+": spoken tones give "+s.length+" syllable(s), written pinyin "+t.length);
+});
+// spoken contours: third-tone sandhi, low third before other tones, light-syllable pitch from the tone before it
+[["nǐ hǎo",["2","3"]],["wǒ hěn hǎo",["2","2","3"]],["hǎochī",["3L","1"]],["kěyǐ shuākǎ ma",["2","3L","1","3L","n4"]],
+ ["xièxie",["4","n1"]],["duìbuqǐ",["4","n1","3"]],["nǐ huì shuō Yīngwén ma",["3L","4","1","1","2","n3"]],
+ ["wǒ duì … guòmǐn",["3L","4","4","3"]],["bú shì",["2","4"]],["zhēnzhū nǎichá",["1","1","3L","2"]],["Yī",["1"]],["Xīān",["1","1"]]
+].forEach(([rom,want])=>{const got=D.spokenTones(rom);
+  if(JSON.stringify(got)!==JSON.stringify(want))err("spokenTones(“"+rom+"”) gave "+JSON.stringify(got)+", expected "+JSON.stringify(want))});
 const VIEWS=["plan","essentials","study","scripts","phrasebook","customs"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");

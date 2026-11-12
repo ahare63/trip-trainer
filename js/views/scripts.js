@@ -56,6 +56,7 @@ function renderScripts(){
       <p class="meta" style="margin-top:6px;max-width:62ch">In Mandarin the pitch shape of a syllable is part of the word. The marks over the vowels in romanization (pinyin) draw the shape. Don’t try to assemble phrases tone by tone; play each phrase and copy its whole tune.</p>
       <div class="tones">${T.map(t=>`<div class="tone"><svg viewBox="0 0 64 40" aria-hidden="true"><path d="${t[5]}"/></svg><b lang="zh-Hant">${t[2]}</b> <strong>${t[1]}</strong><div class="meta">${t[0]}: ${t[3]}</div><p style="margin:6px 0 8px;font-size:.92rem">${t[4]}</p>${hearBtn(t[2],"tw")}</div>`).join("")}</div>
       <p style="margin:14px 0 0;max-width:62ch">There is also a light, toneless syllable, as in the second half of xièxie (thank you) or the question ending ma. ${hearBtn("謝謝","tw","Hear xièxie")}</p>
+      <p style="margin:14px 0 0;max-width:62ch">The lines under the pinyin on Taiwan cards draw each phrase as it is spoken, not as it is written. When two third tones meet, the first one rises: nǐ hǎo is said ní hǎo. A third tone before any other syllable stays low without rising again.</p>
     </div>
     <div class="panel"><h3>Reading the “sounds like” spellings</h3>
       <p class="meta" style="margin-top:6px;max-width:62ch">The plain-English spellings on the cards are approximations. These are the sounds English spelling handles worst.</p>

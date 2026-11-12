@@ -25,8 +25,9 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 4. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
 5. `js/cards.js`: builds `CARDS`
 6. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `speak`
-7. `js/views/*.js`: one `render…()` function per screen
-8. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+7. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+8. `js/views/*.js`: one `render…()` function per screen
+9. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 
