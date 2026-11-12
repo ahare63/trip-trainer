@@ -1,7 +1,7 @@
 "use strict";
 /* ---------- your trip: cards written from the learner's notes, behind the checks in js/tripcheck.js ---------- */
 const trip={text:null,busy:false,who:"",step:"",report:null,err:"",
-  hand:{c:"kr",en:"",nat:"",err:"",ok:""}};
+  hand:{c:"kr",en:"",nat:"",err:"",ok:""},quick:{c:"kr",text:"",err:"",ok:""},focus:""};
 const HAND_NAT={tw:"台北君悅酒店",kr:"롯데호텔 서울",jp:"浅草ビューホテル"};
 const TRIP_ONE_STEP={write:"Writing the pronunciation.",read:"A second model is reading it without seeing the English.",compare:"Comparing the two readings."};
 const countryOptions=sel=>Object.keys(C).map(c=>`<option value="${c}"${c===sel?" selected":""}>${C[c].name}</option>`).join("");
@@ -14,10 +14,15 @@ async function addOne(who,f,run){
   const r=await run(stop?async()=>{throw {code:stop}}:askJSON,s=>{trip.step=TRIP_ONE_STEP[s]||"";renderTrip()});
   if(r.error)f.err=aiMessage(r.error);
   else if(!r.card)f.err="Not added. "+r.why;
-  else if(applyTripCard(r)){session=null;f.ok="Added “"+r.card.en+"” to your deck.";f.en="";f.nat=""}
+  else if(applyTripCard(r)){session=null;f.ok="Added “"+r.card.en+"” to your deck.";f.en="";f.nat="";f.text=""}
   else f.err="Not added. "+TRIP_FULL;
   trip.busy=false;trip.who="";trip.step="";renderTrip();
 }
+function quickAddNow(){const f=trip.quick;return addOne("quick",f,(ask,step)=>quickAdd({c:f.c,text:f.text},ask,CARDS,state.hold,step))}
+function quickFrom(q,c){
+  if(q)trip.quick.text=q;
+  if(C[c])trip.quick.c=c;
+  trip.focus="quick-text";location.hash="trip"}
 function addByHand(){const f=trip.hand;return addOne("hand",f,(ask,step)=>addPlaceByHand({c:f.c,en:f.en,nat:f.nat},ask,CARDS,state.hold,step))}
 const TRIP_STEP={write:"Writing cards for your trip. This can take a minute.",
   read:"A second model is reading each card without seeing the English.",
@@ -43,7 +48,7 @@ function tripEntry(k,acts,why){return `<div class="entry" data-c="${k.c}"><div><
   ${hearBtn(k.nat,k.c)}${k.note?`<div class="e-note">${h(k.note)}</div>`:""}${why?`<div class="e-why">Left out: ${h(why)}</div>`:""}${acts?`<div class="e-acts">${acts}</div>`:""}</div>`}
 function renderTrip(){
   if(trip.text==null)trip.text=state.itin||"";
-  const r=trip.report,hand=trip.hand;
+  const r=trip.report,hand=trip.hand,quick=trip.quick;
   let rep="";
   if(r){
     rep=`<div class="panel" aria-live="polite"><h3>${r.blocked?"Nothing was added":"Result of the checks"}</h3>`;
@@ -77,6 +82,12 @@ function renderTrip(){
       <label class="fld">Name in the local script<input class="ta" id="hand-nat" maxlength="80" autocomplete="off" lang="${C[hand.c].hl}" placeholder="${h(HAND_NAT[hand.c])}" value="${h(hand.nat)}" ${trip.busy?"disabled":""}></label></div>
     <div class="row" style="margin-top:12px"><button class="btn" data-handadd="1" ${trip.busy?"disabled":""}>${trip.busy&&trip.who==="hand"?"Adding…":"Add this place"}</button><span class="meta" aria-live="polite">${trip.who==="hand"?h(trip.step):""}</span></div>
     ${hand.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(hand.err)}</p>`:""}${hand.ok?`<p class="good" role="status" style="margin-top:10px">${h(hand.ok)}</p>`:""}</div>
+  <div class="panel" id="quick-add"><h3>Quick add</h3>
+    <p class="meta" style="margin-top:6px;max-width:62ch">Ran into a word or phrase? Type it in English and Claude translates it, or paste it in the local script and Claude adds the pronunciation and meaning. One card at a time, with the same checks as above.</p>
+    <div class="fgrid"><label class="fld">Country<select class="ta" id="quick-c" ${trip.busy?"disabled":""}>${countryOptions(quick.c)}</select></label>
+      <label class="fld">Word or phrase<input class="ta" id="quick-text" maxlength="90" autocomplete="off" placeholder="Where is the subway?" value="${h(quick.text)}" ${trip.busy?"disabled":""}></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn" data-quickadd="1" ${trip.busy?"disabled":""}>${trip.busy&&trip.who==="quick"?"Adding…":"Add this card"}</button><span class="meta" aria-live="polite">${trip.who==="quick"?h(trip.step):""}</span></div>
+    ${quick.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(quick.err)}</p>`:""}${quick.ok?`<p class="good" role="status" style="margin-top:10px">${h(quick.ok)}</p>`:""}</div>
   <div class="panel"><h3>Cards from your trip${state.trip.length?` (${state.trip.length})`:""}</h3>
     ${state.trip.length?`<p class="meta" style="margin-top:6px">These appear in Today’s cards alongside the course, and in the phrasebook under “Your trip.”</p>${state.trip.map(k=>tripEntry(k,`<button class="btn ghost small" data-tripdel="${h(k.id)}">Remove</button>`)).join("")}`
       :`<p class="meta" style="margin-top:6px">None yet. Build some from your itinerary above.</p>`}</div>
@@ -86,4 +97,5 @@ function renderTrip(){
     <li>A second model reads each card’s foreign text without seeing the English, and says what it means and how it is pronounced.</li>
     <li>The two readings are compared. A card joins your deck only if the meaning, the romanization and the sounds-like spelling all agree.</li></ol>
     <p class="meta" style="margin:12px 0 0;max-width:64ch">This catches mistranslations and wrong scripts. It can’t confirm what a hotel, restaurant or shop calls itself, so check business names against your booking.</p></div>`;
+  if(trip.focus){const f=$("#"+trip.focus);trip.focus="";if(f){f.focus({preventScroll:true});f.scrollIntoView({block:"center"})}}
 }

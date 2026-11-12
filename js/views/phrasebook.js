@@ -22,5 +22,5 @@ function renderPhrasebook(keepFocus){
     ${hearBtn(k.nat,k.c)}
     ${k.cat==="dish"?dishPhoto(k,true):""}
     ${k.note?`<div class="e-note">${h(k.note)}</div>`:""}</div>`).join("")
-    :`<p class="meta">Nothing matches. Clear the search or choose “All categories.”</p>`;
+    :`<p class="meta">Nothing matches. Clear the search or choose “All categories.” Or <button class="btn ghost small" data-quickfrom="1">add it as a card</button> from the Your trip tab.</p>`;
 }
