@@ -56,3 +56,8 @@ const PHOTOS={
   "jp-dish-powdered-green-tea":{file:"images/dishes/jp-dish-powdered-green-tea.jpg",title:"Matcha Scoop",author:"Evanhoever",license:"CC BY-SA 4.0",source:"https://commons.wikimedia.org/wiki/File:Matcha_Scoop.jpg"}
 };
 const PHOTOS_MISSING=["jp-dish-japanese-pub"];
+function licenseURL(l){
+  if(/^CC0/.test(l))return "https://creativecommons.org/publicdomain/zero/1.0/";
+  const m=/^CC (BY(?:-SA)?) (\d\.\d)$/.exec(l);
+  return m?"https://creativecommons.org/licenses/"+m[1].toLowerCase()+"/"+m[2]+"/":"";
+}

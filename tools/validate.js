@@ -119,10 +119,14 @@ Object.keys(D.PHOTOS).forEach(id=>{
     else if(w>MAX_W)err(at+": image is "+w+" px wide, limit "+MAX_W);
   }
   if(!LICENSES.includes(p.license))err(at+": license “"+p.license+"” is not in the allowed list");
+  else if(p.license!=="Public domain"&&!/^https:\/\/creativecommons\.org\/(licenses|publicdomain)\//.test(D.licenseURL(p.license)))err(at+": no license link for “"+p.license+"”");
   if(!p.title||!String(p.title).trim())err(at+": title is missing");
   if(!p.author||!String(p.author).trim())err(at+": author is missing");
   if(!/^https:\/\/commons\.wikimedia\.org\/wiki\/File:\S+$/.test(p.source||""))err(at+": source must be a https://commons.wikimedia.org/wiki/File: URL");
 });
+[["CC BY-SA 2.5","https://creativecommons.org/licenses/by-sa/2.5/"],["CC BY 4.0","https://creativecommons.org/licenses/by/4.0/"],
+ ["CC0","https://creativecommons.org/publicdomain/zero/1.0/"],["CC0 1.0","https://creativecommons.org/publicdomain/zero/1.0/"],["Public domain",""]
+].forEach(([l,want])=>{const got=D.licenseURL(l);if(got!==want)err("licenseURL(“"+l+"”) gave “"+got+"”, expected “"+want+"”")});
 D.PHOTOS_MISSING.forEach(id=>{if(!dishIds.has(id))err("PHOTOS_MISSING: not a dish card id: "+id)});
 if(new Set(D.PHOTOS_MISSING).size!==D.PHOTOS_MISSING.length)err("PHOTOS_MISSING has duplicates");
 dishIds.forEach(id=>{if(!D.PHOTOS[id]&&!D.PHOTOS_MISSING.includes(id))err("Dish card "+id+" is in neither PHOTOS nor PHOTOS_MISSING")});
