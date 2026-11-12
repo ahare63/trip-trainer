@@ -35,6 +35,9 @@ document.addEventListener("click",e=>{
   if(d.dnext){nextWord();renderScripts();return}
   if(d.pbc){pb.c=d.pbc;renderPhrasebook();return}
   if(d.build){buildTrip();return}
+  if(d.handadd){addByHand();return}
+  if(d.quickadd){quickAddNow();return}
+  if(d.quickfrom!=null){quickFrom(pb.q.trim(),pb.c);return}
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
   if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
   if(d.tripdel){removeTripCard(d.tripdel);session=null;renderTrip();return}
@@ -49,10 +52,13 @@ function reveal(){
 document.addEventListener("change",e=>{
   if(e.target.id==="auto"){state.auto=e.target.checked;commit()}
   if(e.target.id==="pb-cat"){pb.cat=e.target.value;renderPhrasebook()}
+  if(e.target.id==="hand-c"){trip.hand.c=e.target.value;const n=$("#hand-nat");if(n){n.lang=C[trip.hand.c].hl;n.placeholder=HAND_NAT[trip.hand.c]}}
+  if(e.target.id==="quick-c")trip.quick.c=e.target.value;
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
-document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value});
+document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value});
 document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.isComposing&&e.target.id==="quick-text"){e.preventDefault();quickAddNow();return}
   if(current()!=="study"||!session||session.i>=session.q.length)return;
   const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="select"||tag==="textarea")return;
   if(e.key===" "&&!session.shown&&tag!=="button"){e.preventDefault();reveal()}

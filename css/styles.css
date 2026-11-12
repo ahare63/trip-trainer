@@ -191,6 +191,10 @@ table.key th{font-weight:600;white-space:nowrap}
 .ta{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--rule);border-radius:10px;padding:10px 12px;width:100%;display:block}
 textarea.ta{min-height:150px;resize:vertical;line-height:1.45}
 .err{color:var(--warn);font-weight:600}
+.good{color:var(--good);font-weight:600}
+.fgrid{display:grid;gap:12px;margin-top:12px;max-width:520px}
+.fld{display:grid;gap:4px;font-weight:600;font-size:.9rem}
+.fld .ta{font-weight:400;font-size:1rem}
 .entry .e-acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .entry .e-why{grid-column:1/-1;color:var(--warn);font-size:.9rem}
 .entry .e-en,.entry .e-nat,.entry .e-say,.entry .e-rom{overflow-wrap:anywhere}
