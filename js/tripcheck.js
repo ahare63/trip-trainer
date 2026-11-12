@@ -272,7 +272,7 @@ function applyTripCard(res){
   if(state.trip.length===before)return false;
   syncTrip();commit();return true}
 function removeTripCard(id){
-  state.trip=state.trip.filter(k=>k.id!==id);delete state.cards[id];
+  state.trip=state.trip.filter(k=>k.id!==id);delete state.cards[id];delete state.notes[id];
   syncTrip();commit()}
 function resolveHold(id,add){
   const i=state.hold.findIndex(k=>k.id===id); if(i<0)return false;

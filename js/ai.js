@@ -41,5 +41,5 @@ const AI_COPY={
   network:"The request couldn’t reach Claude, so nothing was added. Check your connection and try again.",
   declined:"Claude declined this request, so nothing was added.",
   invalid_json:"Claude’s reply couldn’t be read, so nothing was added. Try again.",
-  unavailable:"Claude isn’t available in this view of the page, so cards can’t be built here."};
+  unavailable:"Claude isn’t available in this view of the page, so nothing was added."};
 const aiMessage=code=>AI_COPY[code]||"The request didn’t complete, so nothing was added. Try again.";

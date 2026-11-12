@@ -3,7 +3,7 @@
 /* ---------- state ---------- */
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
-function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0,trip:[],hold:[],itin:"",timeline:[]}}
+function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{}}}
 /* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
 function cleanCard(x){
   if(!x||typeof x!=="object"||!C[x.c])return null;
@@ -29,12 +29,21 @@ function cleanEntry(x){
     link:tlLink(link)?link:"",file:typeof x.file==="string"&&/^[\w-]{1,64}$/.test(x.file)?x.file:"",note:t(x.note,300)}}
 function cleanTimeline(a){const seen={};
   return (Array.isArray(a)?a:[]).map(cleanEntry).filter(e=>e&&!seen[e.id]&&(seen[e.id]=1)).slice(0,TL_MAX)}
+/* generated notes: {tripCardId: {body, at}}, kept only while the trip card exists */
+const NOTE_MAX=3000;
+function cleanNotes(o,trip){
+  const ids=new Set(trip.map(k=>k.id)),out={};
+  if(!o||typeof o!=="object"||Array.isArray(o))return out;
+  Object.keys(o).forEach(id=>{const n=o[id];
+    if(ids.has(id)&&n&&typeof n==="object"&&typeof n.body==="string"&&n.body.trim()&&n.body.length<=NOTE_MAX&&typeof n.at==="number"&&isFinite(n.at))out[id]={body:n.body,at:n.at}});
+  return out}
 function syncTrip(){
   for(let i=CARDS.length-1;i>=0;i--)if(CARDS[i].cat==="trip")CARDS.splice(i,1);
   state.trip.forEach((x,i)=>CARDS.push({id:x.id,c:x.c,wk:0,cat:"trip",kind:x.kind,en:x.en,nat:x.nat,rom:x.rom,say:x.say,note:x.note,ord:i}))}
 function normalize(s){const b=blank();if(!s||typeof s!=="object")return b;
+  const trip=cleanList(s.trip);
   return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,updated:+s.updated||0,
-    trip:cleanList(s.trip),hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline)}}
+    trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip)}}
 let state=blank();
 try{const s=localStorage.getItem(KEY);if(s)state=normalize(JSON.parse(s))}catch(e){}
 syncTrip();
