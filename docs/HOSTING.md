@@ -14,4 +14,6 @@
 
 ## Claude-hosted copy
 
-`node tools/bundle.js` writes `dist/claude.html`, a single self-contained file. Give that file to Claude in a chat and ask it to publish it over the existing artifact. That copy syncs progress to the owner’s Claude account and can use Claude for AI features without an API key.
+`node tools/bundle.js` writes `dist/claude.html`, a single self-contained file. Give that file to Claude in a chat and ask it to publish it over the existing artifact. That copy syncs progress to the owner’s Claude account and can use Claude for AI features without an API key. For that, the artifact must be published with the `sample` capability declared alongside the ones it already has (`db` and `user`, for progress sync); without it, “Your trip” says Claude isn’t available.
+
+On GitHub Pages, “Your trip” asks each visitor for their own Anthropic API key. It is stored only in their browser and sent only to `api.anthropic.com`.

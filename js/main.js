@@ -1,7 +1,7 @@
 "use strict";
 /* Router and event handling. Loaded last; starts the app. */
-const VIEWS=["plan","essentials","study","scripts","phrasebook","customs","credits"];
-const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms,credits:renderCredits};
+const VIEWS=["plan","essentials","study","trip","scripts","phrasebook","customs","credits"];
+const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,trip:renderTrip,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms,credits:renderCredits};
 function current(){const v=location.hash.replace("#","");return VIEWS.includes(v)?v:"plan"}
 function render(){
   const v=current();
@@ -31,19 +31,24 @@ document.addEventListener("click",e=>{
   if(d.dopt){const i=+d.dopt;drill.picked=i;drill.n++;if(drill.opts[i]===drill.cur)drill.score++;renderScripts();return}
   if(d.dnext){nextWord();renderScripts();return}
   if(d.pbc){pb.c=d.pbc;renderPhrasebook();return}
+  if(d.build){buildTrip();return}
+  if(d.keyclear){setKey("");trip.err="";renderTrip();return}
+  if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
+  if(d.tripdel){removeTripCard(d.tripdel);session=null;renderTrip();return}
   if(d.essc){essC=d.essc;renderEssentials();return}
   if(d.essquiz){const cs=essC==="all"?["tw","kr","jp"]:[essC];session={filter:"all",q:shuffle(essList(cs)).map(k=>({k,retry:true})),i:0,shown:false,done:0,practice:true};location.hash="study";return}
 });
 function reveal(){
   if(!session||session.shown)return; session.shown=true; renderStudy();
-  const it=session.q[session.i]; if(state.auto&&it&&!RECOG[it.k.cat])speak(it.k.nat,it.k.c);
+  const it=session.q[session.i]; if(state.auto&&it&&!isRecog(it.k))speak(it.k.nat,it.k.c);
   const g=document.querySelector('[data-grade="1"]'); if(g)g.focus({preventScroll:true});
 }
 document.addEventListener("change",e=>{
   if(e.target.id==="auto"){state.auto=e.target.checked;commit()}
   if(e.target.id==="pb-cat"){pb.cat=e.target.value;renderPhrasebook()}
+  if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
-document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}});
+document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value});
 document.addEventListener("keydown",e=>{
   if(current()!=="study"||!session||session.i>=session.q.length)return;
   const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="select"||tag==="textarea")return;
@@ -52,4 +57,5 @@ document.addEventListener("keydown",e=>{
   else if(session.shown&&e.key==="2")grade(true);
 });
 render();
+aiReady.then(()=>{if(current()==="trip"&&AI.mode!=="claude"&&!trip.busy)renderTrip()});
 connect();

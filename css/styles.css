@@ -173,5 +173,13 @@ table.key th{font-weight:600;white-space:nowrap}
 .col{background:var(--surface);border:1px solid var(--rule);border-top:8px solid var(--c);border-radius:14px;padding:16px}
 .col ul{padding-left:18px;margin:10px 0 0}
 .col li{margin-bottom:8px;font-size:.95rem}
+
+/* your trip */
+.ta{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--rule);border-radius:10px;padding:10px 12px;width:100%;display:block}
+textarea.ta{min-height:150px;resize:vertical;line-height:1.45}
+.err{color:var(--warn);font-weight:600}
+.entry .e-acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.entry .e-why{grid-column:1/-1;color:var(--warn);font-size:.9rem}
+.entry .e-en,.entry .e-nat,.entry .e-say,.entry .e-rom{overflow-wrap:anywhere}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:.9rem;max-width:min(90vw,480px);display:none;z-index:20}
 footer{color:var(--muted);font-size:.82rem;padding:0 0 30px}
