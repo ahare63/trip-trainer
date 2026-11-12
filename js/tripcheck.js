@@ -67,7 +67,7 @@ function tripJudgePrompt(cand,B){return `Decide whether each flashcard for a beg
 "read": the independent translator's romanization
 "say": the card's rough English sounds-like spelling
 
-Set "ok" to true only if all three hold: (1) "back" and "en" mean the same thing; for names, they refer to the same place, and added labels in "en" such as "(your hotel)" are fine; (2) "rom" and "read" agree apart from spacing, hyphens, capitalization and equivalent tone or long-vowel notation; (3) "say" is a reasonable approximation of that pronunciation for an English speaker.
+Set "ok" to true only if all three hold: (1) "back" and "en" mean the same thing; for names, they refer to the same place, and added labels in "en" such as "(your hotel)" are fine; (2) "rom" is the correct standard romanization of "nat". Use "read" as a second opinion, not as the answer: they may differ in spacing, hyphens, capitalization and equivalent tone or long-vowel notation, and the standards spell some sound changes as pronounced (Revised Romanization writes 서울역 as "Seoullyeok"), so when they differ, decide which is correct and fail the card only if "rom" is wrong; (3) "say" is a reasonable approximation of that pronunciation for an English speaker.
 Otherwise set "ok" to false and give "reason": at most 15 words on what is wrong.
 
 Items:
