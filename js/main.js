@@ -1,7 +1,7 @@
 "use strict";
 /* Router and event handling. Loaded last; starts the app. */
-const VIEWS=["plan","essentials","study","trip","scripts","phrasebook","customs","credits"];
-const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,trip:renderTrip,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms,credits:renderCredits};
+const VIEWS=["plan","essentials","study","talk","trip","scripts","phrasebook","customs","credits"];
+const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,talk:renderTalk,trip:renderTrip,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms,credits:renderCredits};
 function current(){const v=location.hash.replace("#","");return VIEWS.includes(v)?v:"plan"}
 function render(){
   const v=current();
@@ -41,6 +41,8 @@ document.addEventListener("click",e=>{
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
   if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
   if(d.tl){tlAct(d.tl,d.id);return}
+  if(d.talkc){tk.c=d.talkc;tk.msg="";renderTalk();return}
+  if(d.talk){talkAct(d.talk,d.i,d.id);return}
   if(d.note){noteAct(d.note,d.id);return}
   if(d.tripdel){removeTripCard(d.tripdel);delete nv.err[d.tripdel];delete nv.open[d.tripdel];session=null;renderTrip();return}
   if(d.essc){essC=d.essc;renderEssentials();return}
@@ -59,9 +61,10 @@ document.addEventListener("change",e=>{
   if(e.target.id==="tl-file"){const f=e.target.files[0];e.target.value="";tlFilePicked(f)}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
-document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value});
+document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value;if(e.target.id==="talk-text")tk.text=e.target.value});
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.isComposing&&e.target.id==="quick-text"){e.preventDefault();quickAddNow();return}
+  if(e.key==="Enter"&&!e.isComposing&&e.target.id==="talk-text"){e.preventDefault();talkSend();return}
   if(current()!=="study"||!session||session.i>=session.q.length)return;
   const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="select"||tag==="textarea")return;
   if(e.key===" "&&!session.shown&&tag!=="button"){e.preventDefault();reveal()}
@@ -69,6 +72,6 @@ document.addEventListener("keydown",e=>{
   else if(session.shown&&e.key==="2")grade(true);
 });
 render();
-aiReady.then(()=>{if(current()==="trip"&&AI.mode!=="claude"&&!trip.busy)renderTrip()});
+aiReady.then(()=>{if(current()==="trip"&&AI.mode!=="claude"&&!trip.busy)renderTrip();if(current()==="talk"&&!tk.busy)renderTalk()});
 tl.ready.then(()=>{if(current()==="trip"&&!tlv.busy)renderTrip()});
 connect();

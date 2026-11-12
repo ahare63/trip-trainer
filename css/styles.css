@@ -39,7 +39,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--paper);border-bottom:1px solid var(--rule)}
 nav.tabs{display:flex;gap:4px;overflow-x:auto;max-width:860px;margin:0 auto;padding:8px 12px;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
-nav.tabs a{flex:none;padding:8px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;font-size:.95rem}
+nav.tabs a{flex:none;padding:8px 12px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;font-size:.95rem}
 nav.tabs a[aria-current="page"]{background:var(--ink);color:var(--paper)}
 
 main{padding:28px 0 60px}
@@ -230,3 +230,42 @@ footer{color:var(--muted);font-size:.82rem;padding:0 0 30px}
 .note-body p{margin:0 0 .8em}
 .note-src{max-width:62ch;margin:4px 0 0;overflow-wrap:anywhere}
 .note-src a{color:var(--ink);font-weight:600}
+
+/* conversations */
+.t-scenes{margin-top:12px}
+.t-item{align-items:center}
+.t-item .meta{max-width:62ch}
+.t-scene{border-top:8px solid var(--c)}
+.t-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.t-head .meta{display:flex;align-items:center;gap:8px;margin-top:6px}
+.t-setup{color:var(--muted);margin:10px 0 0;max-width:62ch}
+.t-log{display:grid;gap:10px;margin-top:16px}
+.t-line{border-radius:12px;padding:10px 14px;min-width:0;max-width:min(100%,560px);background:var(--paper)}
+.t-them{border-left:5px solid var(--c);justify-self:start}
+.t-you{border-right:5px solid var(--ink);justify-self:end;text-align:right}
+.t-coach{background:transparent;border:1.5px dashed var(--rule);justify-self:start}
+.t-who{font-size:.8rem;font-weight:600;color:var(--muted)}
+.t-nat{font-size:1.45rem;line-height:1.35;overflow-wrap:anywhere}
+.t-nat[lang="ko"],.t-chip [lang="ko"]{word-break:keep-all}
+.t-said{overflow-wrap:anywhere}
+.t-line .e-say,.t-word .e-say,.t-instead .e-say{font-weight:600;overflow-wrap:anywhere}
+.t-line .e-rom,.t-instead .e-rom{font-style:italic;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+mark.t-new{background:transparent;color:inherit;text-decoration:underline 2px var(--warn);text-underline-offset:5px}
+.t-tag{display:inline-block;font-size:.72rem;font-weight:600;border:1.5px solid var(--warn);color:var(--warn);border-radius:999px;padding:0 8px;vertical-align:middle}
+.t-newword{font-size:.9rem;margin-top:4px;overflow-wrap:anywhere}
+.t-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.t-en{margin-top:8px;font-style:italic;overflow-wrap:anywhere}
+.t-wait{margin-top:12px}
+.t-reply,.t-fb{border-top:1px solid var(--rule);margin-top:16px;padding-top:14px}
+.t-reply .meta{margin:0;max-width:62ch}
+.t-chips{margin-top:10px}
+.t-chip{display:inline-flex;flex-direction:column;align-items:flex-start;text-align:left;color:var(--ink);line-height:1.25;max-width:100%;border-radius:12px}
+.t-chip span{font-size:1rem;overflow-wrap:anywhere}
+.t-chip small{font-weight:400;font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}
+.t-send{display:flex;gap:8px;margin-top:12px}
+.t-send .ta{flex:1;min-width:0}
+.t-fb h4{margin:0}
+.t-fb h5{margin:16px 0 6px;font-size:.95rem}
+.t-fb ul{padding-left:18px;margin:0;max-width:62ch}
+.t-instead,.t-word{border-top:1px solid var(--rule);padding:10px 0;min-width:0}
+.t-nat-s{font-size:1.25rem}

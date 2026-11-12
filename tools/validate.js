@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,SCENES:typeof SCENES==='undefined'?undefined:SCENES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -49,7 +49,7 @@ D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
  ["wǒ duì … guòmǐn",["3L","4","4","3"]],["bú shì",["2","4"]],["zhēnzhū nǎichá",["1","1","3L","2"]],["Yī",["1"]],["Xīān",["1","1"]]
 ].forEach(([rom,want])=>{const got=D.spokenTones(rom);
   if(JSON.stringify(got)!==JSON.stringify(want))err("spokenTones(“"+rom+"”) gave "+JSON.stringify(got)+", expected "+JSON.stringify(want))});
-const VIEWS=["plan","essentials","study","trip","scripts","phrasebook","customs","credits"];
+const VIEWS=["plan","essentials","study","talk","trip","scripts","phrasebook","customs","credits"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");
   (w.tasks||[]).forEach(t=>{if(!VIEWS.includes(t[0]))err("Week "+(i+1)+" links to an unknown view: "+t[0])})});
@@ -194,6 +194,26 @@ else{
     if(typeof n.source==="string"&&!/^https:\/\/en\.wikipedia\.org\/wiki\/\S+$/.test(n.source))err(at+": source must start with https://en.wikipedia.org/wiki/");
     if(/['"]/.test((n.title||"")+(n.body||"")+(n.sourceTitle||"")))err(at+": use curly quotes (’ “ ”) in title, body and sourceTitle");
   });
+}
+
+// conversation scenarios
+if(!Array.isArray(D.SCENES))err("js/data/scenes.js must be loaded in index.html and define SCENES as an array");
+else{
+  const seenIds={};
+  D.SCENES.forEach((x,i)=>{
+    const at="SCENES "+(x&&x.id||"#"+(i+1));
+    if(!x||typeof x!=="object"){err(at+": not an object");return}
+    Object.keys(x).forEach(f=>{if(!["id","c","who","title","partner","setup","cats"].includes(f))err(at+": unknown field "+f)});
+    if(!D.C[x.c])err(at+": c must be a country key, not "+x.c);
+    if(typeof x.id!=="string"||!/^[a-z]{2}-[a-z]+$/.test(x.id)||x.id.slice(0,2)!==x.c)err(at+": id must be the country key, a hyphen and lowercase letters");
+    if(seenIds[x.id])err(at+": duplicate id");seenIds[x.id]=1;
+    ["who","title","partner","setup"].forEach(f=>{if(typeof x[f]!=="string"||!x[f].trim())err(at+": "+f+" must be a non-empty string")});
+    if(typeof x.title==="string"&&(!/^[A-Z]/.test(x.title)||x.title.split(" ").slice(1).some(w=>/^[A-Z]/.test(w))))err(at+": title is not sentence case");
+    if(typeof x.setup==="string"&&x.setup.length>240)err(at+": setup is over 240 characters");
+    if(/['"]/.test([x.who,x.title,x.partner,x.setup].join("")))err(at+": use curly quotes (’ “ ”) in who, title, partner and setup");
+    if(!Array.isArray(x.cats)||!x.cats.length||x.cats.some(c=>!D.CATS[c]))err(at+": cats must be a non-empty list of categories");
+  });
+  Object.keys(D.C).forEach(c=>{if(D.SCENES.filter(x=>x&&x.c===c).length<5)err("SCENES: "+c+" needs at least 5 scenes")});
 }
 
 const per=Object.keys(D.RAW).map(c=>c+" "+D.RAW[c].length).join(", ");
