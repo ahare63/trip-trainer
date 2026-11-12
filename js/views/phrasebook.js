@@ -19,6 +19,7 @@ function renderPhrasebook(keepFocus){
     <div><div class="e-en">${h(k.en)} <span class="meta" style="font-weight:400">${C[k.c].name}, ${CATS[k.cat].toLowerCase()}</span></div>
     <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div></div>
     ${hearBtn(k.nat,k.c)}
+    ${k.cat==="dish"?dishPhoto(k,true):""}
     ${k.note?`<div class="e-note">${h(k.note)}</div>`:""}</div>`).join("")
     :`<p class="meta">Nothing matches. Clear the search or choose “All categories.”</p>`;
 }

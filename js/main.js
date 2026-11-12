@@ -1,7 +1,7 @@
 "use strict";
 /* Router and event handling. Loaded last; starts the app. */
-const VIEWS=["plan","essentials","study","scripts","phrasebook","customs"];
-const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms};
+const VIEWS=["plan","essentials","study","scripts","phrasebook","customs","credits"];
+const RENDER={plan:renderPlan,essentials:renderEssentials,study:renderStudy,scripts:renderScripts,phrasebook:renderPhrasebook,customs:renderCustoms,credits:renderCredits};
 function current(){const v=location.hash.replace("#","");return VIEWS.includes(v)?v:"plan"}
 function render(){
   const v=current();
