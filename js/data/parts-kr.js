@@ -51,7 +51,6 @@ Object.assign(PARTS,{
 "kr-around-please-take-me-here":{parts:[["여기","here"],["로","to (direction)"],[" ",""],["가","go"],[" ",""],["주세요","please (do for me)"]],lit:"please go to here"},
 "kr-around-where-is":{parts:[["…",""],["어디","where"],["예요","is (polite)"],["?",""]]},
 "kr-around-convenience-store":{parts:[["편의","convenience"],["점","store"]]},
-"kr-around-top-up-a-card":{parts:[["충","fill"],["전","electricity"]],lit:"fill with electricity"},
 "kr-sign-exit":{parts:[["출","out"],["구","mouth, opening"]],lit:"out mouth"},
 "kr-sign-entrance":{parts:[["입","enter"],["구","mouth, opening"]],lit:"enter mouth"},
 "kr-sign-restroom":{parts:[["화장","makeup"],["실","room"]],lit:"makeup room"},
@@ -70,6 +69,6 @@ PARTS_SKIPPED.push(
 "kr-num-one-counting-things","kr-num-two-counting-things","kr-num-three-counting-things","kr-num-1-prices","kr-num-2-prices","kr-num-3-prices","kr-num-4-prices","kr-num-5-prices","kr-num-6-prices","kr-num-7-prices","kr-num-8-prices","kr-num-9-prices","kr-num-10-prices","kr-num-1-000","kr-num-10-000",
 "kr-menu-meat","kr-menu-chicken-the-bird","kr-menu-rice-cooked","kr-menu-noodles","kr-menu-water",
 "kr-dish-grilled-short-ribs","kr-dish-side-dishes",
-"kr-around-t-money-transit-card",
+"kr-around-t-money-transit-card","kr-around-top-up-a-card",
 "kr-sign-men","kr-sign-women","kr-sign-station"
 );

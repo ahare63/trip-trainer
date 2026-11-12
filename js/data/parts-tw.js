@@ -9,12 +9,12 @@ const PARTS_SKIPPED=[];
 Object.assign(PARTS,{
 "tw-basics-hello":{parts:[["你","you"],["好","good, well"]],lit:"you good"},
 "tw-basics-thank-you":{parts:[["謝","thank"],["謝","thank, said twice"]]},
-"tw-basics-excuse-me-sorry-to-bother-you":{parts:[["不","not"],["好","good"],["意思","feeling"]],lit:"not good feeling"},
+"tw-basics-excuse-me-sorry-to-bother-you":{parts:[["不","not"],["好意思","feel at ease"]],lit:"not at ease (embarrassed)"},
 "tw-basics-sorry-a-real-apology":{parts:[["對","face (someone)"],["不","not"],["起","up to it"]],lit:"can’t face you"},
 "tw-basics-no-it-isn-t":{parts:[["不","not"],["是","is"]]},
 "tw-basics-excuse-me-may-i-ask":{parts:[["請","please"],["問","ask"]]},
 "tw-basics-goodbye":{parts:[["再","again"],["見","see"]],lit:"see again"},
-"tw-basics-you-re-welcome":{parts:[["不","not"],["會","will"]],lit:"it won’t (be any bother)"},
+"tw-basics-you-re-welcome":{parts:[["不","not"],["會","will"]]},
 "tw-basics-good-morning":{parts:[["早","morning, early"],["安","peace"]],lit:"morning peace"},
 "tw-basics-i-don-t-understand":{parts:[["我","I"],["聽","listen, hear"],["不","not"],["懂","understand"]],lit:"I hear but can’t understand"},
 "tw-basics-do-you-speak-english":{parts:[["你","you"],["會","can (know how to)"],["說","speak"],["英文","English"],["嗎","question particle"],["?",""]]},
@@ -42,7 +42,6 @@ Object.assign(PARTS,{
 "tw-dish-bubble-tea":{parts:[["珍珠","pearls"],["奶","milk"],["茶","tea"]],lit:"pearl milk tea"},
 "tw-dish-oyster-omelet":{parts:[["蚵","oyster"],["仔","little (noun suffix)"],["煎","pan-fried"]]},
 "tw-dish-stinky-tofu":{parts:[["臭","stinky"],["豆腐","tofu"]]},
-"tw-dish-pork-belly-bun":{parts:[["刈","cut"],["包","bun"]],lit:"cut bun"},
 "tw-dish-scallion-pancake":{parts:[["蔥","scallion"],["油","oil"],["餅","flatbread"]],lit:"scallion oil cake"},
 "tw-dish-fried-chicken-cutlet":{parts:[["雞","chicken"],["排","cutlet"]]},
 "tw-dish-egg-crepe":{parts:[["蛋","egg"],["餅","pancake, flatbread"]]},
@@ -75,5 +74,6 @@ PARTS_SKIPPED.push(
 "tw-basics-yes-that-s-right","tw-basics-please",
 "tw-num-one","tw-num-two","tw-num-three","tw-num-four","tw-num-five","tw-num-six","tw-num-seven","tw-num-eight","tw-num-nine","tw-num-ten","tw-num-hundred",
 "tw-menu-beef","tw-menu-pork","tw-menu-chicken","tw-menu-fish","tw-menu-noodles","tw-menu-rice-cooked","tw-menu-soup","tw-menu-tea","tw-menu-vegetarian","tw-menu-spicy",
+"tw-dish-pork-belly-bun",
 "tw-sign-men","tw-sign-women","tw-sign-push","tw-sign-pull","tw-sign-east","tw-sign-west","tw-sign-south","tw-sign-north"
 );
