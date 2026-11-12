@@ -46,4 +46,8 @@ function toneSVG(tones){
   const g=tones.map((t,i)=>`<path transform="translate(${i*64} 0)" d="${TONE_PATH[t]}"${t?"":' stroke-width="12"'}/>`).join("");
   return `<svg class="tonestrip" viewBox="0 0 ${tones.length*64} 40" width="${tones.length*22}" height="14" aria-hidden="true" fill="none" stroke-linecap="round" stroke-width="6" style="stroke:var(--tw)">${g}</svg>`;
 }
-function toneLine(k){return k.c==="tw"?`<div class="tone-line">${toneSVG(toneMarks(k.rom))}</div>`:""}
+function toneLine(k){
+  if(k.c!=="tw")return "";
+  let t;try{t=toneMarks(k.rom)}catch(e){return ""}
+  return `<div class="tone-line">${toneSVG(t)}</div>`;
+}
