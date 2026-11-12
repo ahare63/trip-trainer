@@ -21,6 +21,9 @@ document.addEventListener("click",e=>{
   if(d.ahead){startSession(session.filter,true);renderStudy();return}
   if(d.practice){startSession(session.filter,false,true);renderStudy();return}
   if(d.show){reveal();return}
+  if(d.letters){studyLetters=!studyLetters;renderStudy();return}
+  if(d.pbBreak){pbOpen[d.pbBreak]=!pbOpen[d.pbBreak];renderPhrasebook();return}
+  if(d.pbLetters){pbLetters=!pbLetters;renderPhrasebook();return}
   if(d.grade){grade(d.grade==="1");return}
   if(d.sub){sub=d.sub;renderScripts();return}
   if(d.letter){selLetter=+d.letter;renderScripts();speak(letterSay(LETTERS[selLetter]),"kr");return}

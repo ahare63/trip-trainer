@@ -21,7 +21,7 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 
 1. `js/data/course.js`: `C` (countries), `CATS` (category labels), `RECOG`, `isRecog(card)`, `isDish(card)`, `WEEK_OF`, `RAW = {}`, `WEEKS`, `ESS`
 2. `js/data/tw.js`, `kr.js`, `jp.js`: fill `RAW.tw`, `RAW.kr`, `RAW.jp`
-3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `compose()`, `LETTERS`, `WORDS`
+3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `FIN_ALL` (all 28 final slots, index 0 empty), `compose()`, `splitHangul(block)` (the letters of one syllable, or `[block]`), `LETTERS`, `WORDS`
 4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`, `licenseURL()`
 5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
 6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`

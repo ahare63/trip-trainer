@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -57,6 +57,16 @@ D.ESS.forEach(r=>Object.keys(D.C).forEach(c=>{
   if(!Array.isArray(r[1][c])||!r[1][c].length)err("Essentials “"+r[0]+"” has nothing for "+c);
   (r[1][c]||[]).forEach(en=>{const n=D.CARDS.filter(k=>k.c===c&&k.en===en).length;if(n!==1)err("Essentials “"+r[0]+"” ("+c+"): “"+en+"” matches "+n+" cards, needs exactly 1")})}));
 D.LETTERS.forEach(l=>{if((l[4]==="v"?D.MED:D.INIT).indexOf(l[0])<0)err("Hangul letter not in INIT/MED: "+l[0]);if(![1,2,3].includes(l[3]))err("Hangul letter set must be 1 to 3: "+l[0])});
+// Hangul blocks split into letters (study answer side, "Show letters")
+[["\ub2ed","\u3137 \u314f \u313a"],["\ud55c","\u314e \u314f \u3134"],["\uc758","\u3147 \u3162"],["\uc788","\u3147 \u3163 \u3146"],["A","A"]].forEach(([b,want])=>{const got=D.splitHangul(b).join(" ");if(got!==want)err("splitHangul("+b+") gave \u201c"+got+"\u201d, expected \u201c"+want+"\u201d")});
+const KR_SYL=new Set(D.CARDS.filter(k=>k.c==="kr").flatMap(k=>[...k.nat].filter(ch=>/[\uac00-\ud7a3]/.test(ch))));
+KR_SYL.forEach(b=>{
+  const L=D.splitHangul(b);
+  if(L.length<2||L.length>3){err("Hangul \u201c"+b+"\u201d splits into "+L.length+" letters, expected 2 or 3");return}
+  if(D.INIT.indexOf(L[0])<0||D.MED.indexOf(L[1])<0||(L.length===3&&D.FIN_ALL.indexOf(L[2])<=0)){err("Hangul \u201c"+b+"\u201d gives letters not in INIT, MED or FIN_ALL: "+L.join(" "));return}
+  const f=L.length===3?D.FIN_ALL.indexOf(L[2]):0;
+  if(D.compose(D.INIT.indexOf(L[0]),D.MED.indexOf(L[1]),f)!==b)err("Hangul \u201c"+b+"\u201d does not recompose from its letters "+L.join(" "));
+});
 D.WORDS.forEach(w=>{if(!/^[\uac00-\ud7af]+$/.test(w[0]))err("Decoding word must be Hangul only: "+w[0]);if(![1,2,3].includes(w[3]))err("Decoding word set must be 1 to 3: "+w[0])});
 if(!D.SIGN_STYLE)err("js/data/signs.js must be loaded in index.html and define SIGN_STYLE");
 else{

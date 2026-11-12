@@ -5,7 +5,14 @@ const INIT_R=["g","kk","n","d","tt","r","m","b","pp","s","ss","","j","jj","ch","
 const MED=["ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅗ","ㅘ","ㅙ","ㅚ","ㅛ","ㅜ","ㅝ","ㅞ","ㅟ","ㅠ","ㅡ","ㅢ","ㅣ"];
 const MED_R=["a","ae","ya","yae","eo","e","yeo","ye","o","wa","wae","oe","yo","u","wo","we","wi","yu","eu","ui","i"];
 const FIN=[[0,"none",""],[1,"ㄱ","k"],[4,"ㄴ","n"],[7,"ㄷ","t"],[8,"ㄹ","l"],[16,"ㅁ","m"],[17,"ㅂ","p"],[19,"ㅅ","t"],[21,"ㅇ","ng"]];
+const FIN_ALL=["","ㄱ","ㄲ","ㄳ","ㄴ","ㄵ","ㄶ","ㄷ","ㄹ","ㄺ","ㄻ","ㄼ","ㄽ","ㄾ","ㄿ","ㅀ","ㅁ","ㅂ","ㅄ","ㅅ","ㅆ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
 const compose=(i,m,f)=>String.fromCharCode(0xAC00+(i*21+m)*28+f);
+const splitHangul=block=>{
+  const c=block.codePointAt(0)-0xAC00;
+  if(block.length!==1||c<0||c>=11172)return [block];
+  const f=c%28;
+  return [INIT[Math.floor(c/588)],MED[Math.floor((c%588)/28)]].concat(f?[FIN_ALL[f]]:[]);
+};
 // [letter, romanization, hint, set, type]
 const LETTERS=[
 ["ㅏ","a","“ah,” as in father. The short stroke points right.",1,"v"],
