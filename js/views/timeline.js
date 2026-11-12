@@ -13,8 +13,7 @@ function tlItem(e,next){
   let files="";
   if(tl.assets){
     files=e.file?`<button class="btn ghost small" data-tl="pick" data-id="${h(e.id)}"${off}>Replace file</button><button class="btn ghost small" data-tl="rmfile" data-id="${h(e.id)}"${off}>Remove file</button>`
-      :`<button class="btn ghost small" data-tl="pick" data-id="${h(e.id)}"${off}>Attach file</button>`;
-    files+=`<span class="meta tl-vis">Anyone this page is shared with can see attached files.</span>`}
+      :`<button class="btn ghost small" data-tl="pick" data-id="${h(e.id)}"${off}>Attach file</button>`;}
   const confirm=asking?`<div class="tl-ask" role="alert"><span>${tlv.confirm.what==="del"?"Delete this entry?"+(e.file?" Its attached file is deleted too.":""):"Delete the attached file?"} This can’t be undone.</span>
     <button class="btn small" data-tl="${tlv.confirm.what==="del"?"delyes":"rmyes"}" data-id="${h(e.id)}"${off}>Delete</button><button class="btn ghost small" data-tl="keep"${off}>Keep it</button></div>`:"";
   return `<li class="tl-item${next?" next":""}" data-kind="${h(e.kind)}">
@@ -46,7 +45,7 @@ function timelineHTML(){
   const all=state.timeline,today=todayISO();
   const shown=tlSorted(tlFilter(all,tlv.filter)),sp=tlSplit(shown,today),next=tlNextUp(shown,today);
   const toBook=all.filter(e=>e.status==="to-book").length;
-  const files=tl.assets?`<input type="file" id="tl-file" accept="application/pdf,image/png,image/jpeg" hidden>`
+  const files=tl.assets?`<p class="meta" style="margin-top:6px;max-width:62ch">Anyone this page is shared with can see the files you attach.</p><input type="file" id="tl-file" accept="application/pdf,image/png,image/jpeg" hidden>`
     :`<p class="meta" style="margin-top:6px;max-width:62ch">${TL_NO_FILES}</p>`;
   let list="";
   if(!all.length)list=`<p class="meta" style="margin-top:12px">Nothing here yet. Add a flight, a train or a hotel, with a link to the ticket.</p>`;

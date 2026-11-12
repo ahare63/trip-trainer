@@ -89,7 +89,7 @@ Cards the learner builds from their own itinerary on the “Your trip” screen.
 
 ## Trip timeline
 
-Flights, trains, hotels and bookings the learner enters on “Your trip”, in `state.timeline`. They are not cards and never become cards.
+Flights, trains, hotels and bookings the learner enters on “Your trip”, in `state.timeline`. They are not cards and never become cards. The panel (`timelineHTML()` in `js/views/timeline.js`) comes first on that view, since it is what the learner checks during the trip.
 
 ```js
 { id: "tl-xxxxxxxx", date: "YYYY-MM-DD", time: "HH:MM" | "", endDate: "" | "YYYY-MM-DD", kind: "flight"|"train"|"bus"|"hotel"|"activity"|"other",

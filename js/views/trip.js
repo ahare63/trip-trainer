@@ -67,6 +67,7 @@ function renderTrip(){
     <p class="meta" style="margin-top:6px;max-width:62ch">This copy of the page runs outside Claude, so building cards needs your own API key, and each build is billed to it. The key is stored only in this browser and sent only to api.anthropic.com.</p>
     <div class="row"><input class="ta" id="trip-key" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Anthropic API key" value="${h(getKey())}" style="max-width:420px">${getKey()?`<button class="btn ghost small" data-keyclear="1">Forget this key</button>`:""}</div></div>`:"";
   $("#v-trip").innerHTML=`<h2>Your trip</h2>
+  ${timelineHTML()}
   <p class="lede">Paste an itinerary, or just list places: hotels, restaurants, stations, neighborhoods. Claude writes cards for them, and each card has to pass the checks below before it joins your deck. Build once from your plans, then add each new booking with “Add a place by hand” or “Quick add” below. Building again rewrites cards for the whole list and can add reworded copies of ones you already have.</p>
   ${keyBox}
   <div style="margin-top:18px"><textarea class="ta" id="trip-text" aria-label="Your itinerary or list of places" maxlength="4000" ${trip.busy?"disabled":""} placeholder="Taipei, 4 nights, hotel near Zhongshan station&#10;Day trip to Jiufen&#10;Seoul, 5 nights in Hongdae&#10;KTX to Busan, staying by Haeundae Beach&#10;Tokyo, 2 nights in Asakusa">${h(trip.text)}</textarea></div>
@@ -92,7 +93,6 @@ function renderTrip(){
     ${state.trip.length?`<p class="meta" style="margin-top:6px">These appear in Today’s cards alongside the course, and in the phrasebook under “Your trip.”</p>${state.trip.map(k=>tripEntry(k,`<button class="btn ghost small" data-tripdel="${h(k.id)}">Remove</button>`)).join("")}`
       :`<p class="meta" style="margin-top:6px">None yet. Build some from your itinerary above.</p>`}</div>
   ${notesHTML()}
-  ${timelineHTML()}
   <div class="panel"><h3>How the cards are checked</h3><ol style="padding-left:20px;margin:10px 0 0;max-width:64ch">
     <li>Every run includes six test phrases with known answers, two per language. If the generator misses more than one, the whole batch is thrown away.</li>
     <li>Each card must be in the right script for its country, come with a pronunciation, and not already be in your deck.</li>
