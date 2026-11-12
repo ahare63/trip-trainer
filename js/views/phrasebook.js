@@ -18,7 +18,7 @@ function renderPhrasebook(keepFocus){
   $("#pb-list").innerHTML=list.length?list.map(k=>`<div class="entry" data-c="${k.c}">
     <div><div class="e-en">${h(k.en)} <span class="meta" style="font-weight:400">${C[k.c].name}, ${CATS[k.cat].toLowerCase()}</span></div>
     ${situationOf(k)?`<div class="e-sit">${h(situationOf(k))}</div>`:""}
-    <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
+    <div class="e-nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
     ${hearBtn(k.nat,k.c)}
     ${k.note?`<div class="e-note">${h(k.note)}</div>`:""}</div>`).join("")
     :`<p class="meta">Nothing matches. Clear the search or choose “All categories.”</p>`;

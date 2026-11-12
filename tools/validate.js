@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[]})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -58,6 +58,15 @@ D.ESS.forEach(r=>Object.keys(D.C).forEach(c=>{
   (r[1][c]||[]).forEach(en=>{const n=D.CARDS.filter(k=>k.c===c&&k.en===en).length;if(n!==1)err("Essentials “"+r[0]+"” ("+c+"): “"+en+"” matches "+n+" cards, needs exactly 1")})}));
 D.LETTERS.forEach(l=>{if((l[4]==="v"?D.MED:D.INIT).indexOf(l[0])<0)err("Hangul letter not in INIT/MED: "+l[0]);if(![1,2,3].includes(l[3]))err("Hangul letter set must be 1 to 3: "+l[0])});
 D.WORDS.forEach(w=>{if(!/^[\uac00-\ud7af]+$/.test(w[0]))err("Decoding word must be Hangul only: "+w[0]);if(![1,2,3].includes(w[3]))err("Decoding word set must be 1 to 3: "+w[0])});
+if(!D.SIGN_STYLE)err("js/data/signs.js must be loaded in index.html and define SIGN_STYLE");
+else{
+  const STYLES=["board","door","notice","plaque","compass"],has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+  D.CARDS.filter(k=>k.cat==="sign").forEach(k=>{if(!has(D.SIGN_STYLE,k.id))err("Sign card has no SIGN_STYLE entry: "+k.id)});
+  Object.keys(D.SIGN_STYLE).forEach(id=>{
+    if(!ids.has(id))err("SIGN_STYLE key is not a card id: "+id);
+    if(!STYLES.includes(D.SIGN_STYLE[id]))err("SIGN_STYLE "+id+" must be one of "+STYLES.join(", ")+", not "+D.SIGN_STYLE[id]);
+  });
+}
 
 const SITUATION_CATS=["basics","order","num","around","help"];
 const cardIds=new Set(D.CARDS.map(k=>k.id));
