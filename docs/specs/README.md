@@ -15,5 +15,7 @@ Each spec is written to be handed to a fresh agent together with `docs/ARCHITECT
 | 07b | Quick add | 06 | Sonnet 5.5 |
 | 07c | Read a booking screenshot | 06, 07a | Opus 5.5 |
 | 08 | Typed conversation partner | 06 | Opus 5.5 |
+| 09 | Trip timeline with ticket links | 06 | Sonnet 5.5 |
+| 10 | Before you go: reading notes | 06 | Sonnet 5.5 with web access |
 
 Several specs add a script to `index.html` and a check to `tools/validate.js`. If two are done in parallel, expect small merge conflicts in those two files.
