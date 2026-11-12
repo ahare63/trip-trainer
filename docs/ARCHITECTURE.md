@@ -26,16 +26,18 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
 6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
 7. `js/data/notes.js`: `NOTES`, the built-in reading notes (see “Reading notes”)
-8. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
-9. `js/cards.js`: builds `CARDS`
-10. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
-11. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
-12. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
-13. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
-14. `js/notes.js`: the generated notes with no page access: `writeNote()`, `applyNote()`, `deleteNote()`, `noteParas()` (see “Reading notes”)
-15. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
-16. `js/views/*.js`: one `render…()` function per screen (`notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
-17. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+8. `js/data/scenes.js`: `SCENES`, the role-play scenarios (see “Conversation partner”)
+9. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
+10. `js/cards.js`: builds `CARDS`
+11. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
+12. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+13. `js/ai.js`: `askJSON(prompt, tier)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
+14. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
+15. `js/notes.js`: the generated notes with no page access: `writeNote()`, `applyNote()`, `deleteNote()`, `noteParas()` (see “Reading notes”)
+16. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
+17. `js/partner.js`: the conversation partner with no page access: `talkVocab`, `talkReady`, `talkFits`, `talkCheckLine`, `talkIsHowTo`, `talkChips`, `talkStart`, `talkSay`, `talkStop`, `talkOffer`, `TALK_GLUE` (see “Conversation partner”)
+18. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+19. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 
@@ -112,6 +114,26 @@ Short history and culture notes for the “Before you go” panel on “Your tri
 - `removeTripCard()` deletes the card’s note. `normalize()` keeps a note only if its key is the id of a card in the cleaned `state.trip`, its `body` is a non-empty string of at most `NOTE_MAX`, and `at` is a finite number.
 - Notes use the `trip.busy` flag like the add forms. `node tools/test-notes.js` runs the real code against a scripted model.
 
+## Conversation partner
+
+Short typed role-plays on the “Talk” tab (`#talk`, `js/views/talk.js`), limited to the cards the learner has seen. It has its own tab because a scene is a long-running activity with its own transcript and reply box; “Your trip” is already a long page of forms, and “Today’s cards” has its own session and keyboard shortcuts. The engine is `js/partner.js`; it never touches the page or `state`, and the scene object lives only in memory, so stopping a scene (or leaving the tab) saves nothing.
+
+- **Scenarios**: `SCENES` in `js/data/scenes.js`, `{id, c, who, title, partner, setup, cats}`. Seven for Taiwan (food stall, bubble tea, restaurant door and bill, taxi, train ticket, hotel check-in, asking the way) and six each for Korea and Japan (no bubble tea). `tools/validate.js` checks the fields, ids, sentence-case titles, curly quotes, categories and at least five scenes per country.
+- **Allowed vocabulary**: `talkVocab(c, state.cards, CARDS, scene.cats)` is every card in `CARDS` for that language whose id has progress in `state.cards` (trip cards included). Progress for ids not in `CARDS` is ignored. Over `TALK_VOCAB` (120), cards in the scene’s `cats` come first, in the listed order, then the rest; within each group, higher review box first, then course order. Fewer than `TALK_MIN_VOCAB` (10) seen cards and `talkReady()` refuses before any request, naming the language (an on-schedule week-2 learner has no Korean or Japanese cards). The list goes to the model as JSON `{id, nat, en}` between `<vocab>` tags.
+- **Segments**: the model returns each partner line as `{line:{segs:[{t, id, new, en, rom, say}], rom, say, en}, done}`. The line shown, spoken and logged is the segments’ `t` joined, so no text can sit outside a segment. `talkCheckLine()` checks every segment in code:
+  1. `id` set: it must be in the allowed list, and `t` (trimmed) must be that card’s whole `nat`; a chunk of it between punctuation or placeholders (`…在哪裡?` gives `在哪裡`); a space-separated word of a chunk (`물` in `물 주세요`); or another run inside a chunk at least two characters long, not counting spaces (`這個` in `我要這個`). A single character cut out of a longer word is refused (`好` from `你好`, `水` from `お水をください`).
+  2. no `id`, `new: true`: one word in the local script (`tripScriptOK`) with no spaces or punctuation, at most `TALK_NEW_LEN` characters (tw 4, kr 6, jp 8), with an English `en` and a Latin-letter `say`. If it is exactly an allowed card’s whole text, chunk or word, it is treated as that card and not counted. Otherwise distinct new words are counted across the whole scene, and more than `TALK_NEW` (2) is a violation.
+  3. no `id`, not new: allowed only if it is spaces, punctuation, symbols or digits, or exactly one of the fixed per-language particles, endings, counters and currency units in `TALK_GLUE`. Anything else, including English, is a violation.
+  The line also needs at least one card, new word or digit; a Latin-letter `say` for the whole line; Latin-letter `rom` if given; an English `en`; at most 40 segments and 160 characters. The model’s `say`, `rom` and `en` are not checked beyond that.
+- **Violations**: a line that fails is never shown. It is asked for again once, with the errors stated in the prompt (“Your previous reply was rejected for these reasons: …”); a second failure ends the scene with `TALK_OFF_LIST`.
+- **Turns**: the partner opens. Each learner reply is a turn; after `TALK_MAX` (8) turns, or when the partner sets `done` from turn `TALK_MIN` (6) on, the scene goes to stage `"feedback"` and asks for `{worked, instead}`. A reply matching `talkIsHowTo()` (“How do I say…”, “What’s the word for…”) gets a coached answer `{nat, rom, say, en}` instead and uses no turn; coach entries are not sent as conversation turns. Each request sends the whole conversation, kept by the page, as JSON between `<conversation>` tags, and the latest reply separately between `<reply>` tags. Learner text is capped at 120 characters and has `reply`, `conversation` and `vocab` tags stripped (repeatedly, so nested tags don’t survive) before it is logged or sent.
+- **Replies**: phrase chips are the seen production cards (`talkChips()`, not recognition cards); tapping one appends its `nat` to the reply box, so a placeholder phrase can be completed by typing. The learner can also type romanization or English.
+- **Failures**: a rejected request at any point ends the scene with `aiMessage(code)`; the view says “Add your Anthropic API key on the Your trip tab first” for `no_key`. A failed or unreadable feedback request shows its message where the feedback would be, and the new words are still offered.
+- **New words as cards**: only when the learner taps “Add as a card”, `talkOffer(scene, i, …)` runs `quickAdd()` (spec 07b) on the word’s local-script text, and the view saves with `applyTripCard()`. Nothing else in a scene changes `state`.
+- **Stopping**: `talkStop()` marks the scene stopped; the engine checks after every request and drops a late answer, and the view also drops it with a run counter. Stop is available at every point of the talk stage, including while waiting.
+- The view has its own busy flag, `tk.busy`, separate from `trip.busy`.
+- `node tools/test-partner.js` runs the real engine against a scripted model, with learner states for week 2 and week 7 built from real card ids.
+
 ## Asking Claude
 
 `askJSON(prompt, tier)` in `js/ai.js` is the shared entry point; every feature (the batch build, adding a place by hand) passes it to the pure functions in `js/tripcheck.js` as `ask` rather than calling a model itself. `tier` is `"default"` or `"complex"`. It resolves with parsed JSON and rejects with `{code}`; `aiMessage(code)` gives the sentence to show.
@@ -158,7 +180,7 @@ Short history and culture notes for the “Before you go” panel on “Your tri
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js` and `test-notes.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js` and `test-partner.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.

@@ -13,4 +13,5 @@ jobs:
       - run: node tools/test-add.js
       - run: node tools/test-timeline.js
       - run: node tools/test-notes.js
+      - run: node tools/test-partner.js
       - run: node tools/bundle.js
