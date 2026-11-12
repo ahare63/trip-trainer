@@ -24,7 +24,7 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `compose()`, `LETTERS`, `WORDS`
 4. `js/cards.js`: builds `CARDS`
 5. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `speak`
-6. `js/tones.js`: `toneMarks(rom)`, `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+6. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
 7. `js/views/*.js`: one `render…()` function per screen
 8. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
