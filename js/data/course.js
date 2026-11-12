@@ -3,8 +3,11 @@
 const C={tw:{name:"Taiwan",code:"TW",lang:"zh-TW",hl:"zh-Hant",tongue:"Mandarin"},
          kr:{name:"Korea",code:"KR",lang:"ko-KR",hl:"ko",tongue:"Korean"},
          jp:{name:"Japan",code:"JP",lang:"ja-JP",hl:"ja",tongue:"Japanese"}};
-const CATS={basics:"Basics",order:"Ordering",num:"Numbers",dish:"Dishes",menu:"Menu words",around:"Getting around",sign:"Signs",help:"If something goes wrong"};
+const CATS={basics:"Basics",order:"Ordering",num:"Numbers",dish:"Dishes",menu:"Menu words",around:"Getting around",sign:"Signs",help:"If something goes wrong",trip:"Your trip"};
 const RECOG={dish:1,menu:1,sign:1};
+// trip cards (cat "trip") carry a kind instead; a trip dish is shown like a course dish
+const isDish=k=>k.cat==="dish"||k.kind==="dish";
+const isRecog=k=>!!RECOG[k.cat]||k.kind==="dish";
 // which week each category unlocks in, per country: one language at a time
 const WEEK_OF={tw:{basics:1,order:2,num:2,menu:3,dish:3,around:4,sign:4,help:8},
                kr:{basics:4,order:5,num:5,menu:5,dish:6,around:6,sign:6,help:8},

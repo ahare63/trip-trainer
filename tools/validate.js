@@ -49,7 +49,7 @@ D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
  ["wǒ duì … guòmǐn",["3L","4","4","3"]],["bú shì",["2","4"]],["zhēnzhū nǎichá",["1","1","3L","2"]],["Yī",["1"]],["Xīān",["1","1"]]
 ].forEach(([rom,want])=>{const got=D.spokenTones(rom);
   if(JSON.stringify(got)!==JSON.stringify(want))err("spokenTones(“"+rom+"”) gave "+JSON.stringify(got)+", expected "+JSON.stringify(want))});
-const VIEWS=["plan","essentials","study","scripts","phrasebook","customs","credits"];
+const VIEWS=["plan","essentials","study","trip","scripts","phrasebook","customs","credits"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");
   (w.tasks||[]).forEach(t=>{if(!VIEWS.includes(t[0]))err("Week "+(i+1)+" links to an unknown view: "+t[0])})});

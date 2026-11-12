@@ -30,14 +30,17 @@ js/data/              course content: one file per language, plus course structu
 images/dishes/        dish photos, one JPEG per card id
 js/cards.js           turns the data rows into card objects
 js/core.js            saved progress, helpers, audio
+js/ai.js              asks Claude for JSON, in either place the site runs
+js/tripcheck.js       the checks behind “Your trip” cards
 js/views/             one file per screen
 js/main.js            router and event handling
 tools/validate.js     checks the course data
+tools/test-trip.js    tests the trip-card checks against a scripted model
 tools/bundle.js       builds a single-file copy (dist/claude.html)
 docs/                 architecture notes, hosting steps, and specs for planned work
 ```
 
-After any change, run `node tools/validate.js`. See `docs/ARCHITECTURE.md` before contributing and `docs/specs/` for what is planned.
+After any change, run `node tools/validate.js` and `node tools/test-trip.js`. See `docs/ARCHITECTURE.md` before contributing and `docs/specs/` for what is planned.
 
 ## How it was built
 
