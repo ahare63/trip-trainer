@@ -91,6 +91,7 @@ function renderTrip(){
   <div class="panel"><h3>Cards from your trip${state.trip.length?` (${state.trip.length})`:""}</h3>
     ${state.trip.length?`<p class="meta" style="margin-top:6px">These appear in Today’s cards alongside the course, and in the phrasebook under “Your trip.”</p>${state.trip.map(k=>tripEntry(k,`<button class="btn ghost small" data-tripdel="${h(k.id)}">Remove</button>`)).join("")}`
       :`<p class="meta" style="margin-top:6px">None yet. Build some from your itinerary above.</p>`}</div>
+  ${timelineHTML()}
   <div class="panel"><h3>How the cards are checked</h3><ol style="padding-left:20px;margin:10px 0 0;max-width:64ch">
     <li>Every run includes six test phrases with known answers, two per language. If the generator misses more than one, the whole batch is thrown away.</li>
     <li>Each card must be in the right script for its country, come with a pronunciation, and not already be in your deck.</li>

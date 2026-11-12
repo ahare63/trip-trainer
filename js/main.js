@@ -40,6 +40,7 @@ document.addEventListener("click",e=>{
   if(d.quickfrom!=null){quickFrom(pb.q.trim(),pb.c);return}
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
   if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
+  if(d.tl){tlAct(d.tl,d.id);return}
   if(d.tripdel){removeTripCard(d.tripdel);session=null;renderTrip();return}
   if(d.essc){essC=d.essc;renderEssentials();return}
   if(d.essquiz){const cs=essC==="all"?["tw","kr","jp"]:[essC];session={filter:"all",q:shuffle(essList(cs)).map(k=>({k,retry:true})),i:0,shown:false,done:0,practice:true};location.hash="study";return}
@@ -54,9 +55,10 @@ document.addEventListener("change",e=>{
   if(e.target.id==="pb-cat"){pb.cat=e.target.value;renderPhrasebook()}
   if(e.target.id==="hand-c"){trip.hand.c=e.target.value;const n=$("#hand-nat");if(n){n.lang=C[trip.hand.c].hl;n.placeholder=HAND_NAT[trip.hand.c]}}
   if(e.target.id==="quick-c")trip.quick.c=e.target.value;
+  if(e.target.id==="tl-file"){const f=e.target.files[0];e.target.value="";tlFilePicked(f)}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
-document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value});
+document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value});
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.isComposing&&e.target.id==="quick-text"){e.preventDefault();quickAddNow();return}
   if(current()!=="study"||!session||session.i>=session.q.length)return;
@@ -67,4 +69,5 @@ document.addEventListener("keydown",e=>{
 });
 render();
 aiReady.then(()=>{if(current()==="trip"&&AI.mode!=="claude"&&!trip.busy)renderTrip()});
+tl.ready.then(()=>{if(current()==="trip"&&!tlv.busy)renderTrip()});
 connect();
