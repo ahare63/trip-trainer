@@ -10,9 +10,9 @@ const errors=[],err=m=>errors.push(m);
 for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a missing file: "+s);
 
 // load the data files and the card builder in a sandbox
-const dataFiles=srcs.filter(s=>s.startsWith("js/data/")).concat("js/cards.js");
+const dataFiles=srcs.filter(s=>s.startsWith("js/data/")).concat("js/cards.js","js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,toneMarks})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -36,6 +36,12 @@ for(const c of Object.keys(D.RAW)){
 }
 D.CARDS.forEach(k=>{if(ids.has(k.id))err("Duplicate card id: "+k.id);ids.add(k.id)});
 const pairs={};D.CARDS.forEach(k=>{const p=k.c+"|"+k.cat+"|"+k.en;if(pairs[p])err("Two cards share country, category and English text: "+p);pairs[p]=1});
+const HAN_G=/[\u4e00-\u9fff]/g;
+D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
+  const t=D.toneMarks(k.rom),n=(k.nat.match(HAN_G)||[]).length,at="tw “"+k.en+"” ("+k.rom+")";
+  if(t.length!==n)err(at+": "+t.length+" syllable(s) in pinyin but "+n+" Chinese character(s)");
+  if(t.some(x=>![0,1,2,3,4].includes(x)))err(at+": tone values must be 0 to 4");
+});
 const VIEWS=["plan","essentials","study","scripts","phrasebook","customs"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");
