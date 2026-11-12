@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -130,6 +130,40 @@ Object.keys(D.PHOTOS).forEach(id=>{
 D.PHOTOS_MISSING.forEach(id=>{if(!dishIds.has(id))err("PHOTOS_MISSING: not a dish card id: "+id)});
 if(new Set(D.PHOTOS_MISSING).size!==D.PHOTOS_MISSING.length)err("PHOTOS_MISSING has duplicates");
 dishIds.forEach(id=>{if(!D.PHOTOS[id]&&!D.PHOTOS_MISSING.includes(id))err("Dish card "+id+" is in neither PHOTOS nor PHOTOS_MISSING")});
+
+// word and character breakdowns
+if(!D.PARTS||!Array.isArray(D.PARTS_SKIPPED))err("js/data/parts-tw.js must be loaded in index.html and define PARTS and PARTS_SKIPPED");
+else{
+  const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k),byId={};D.CARDS.forEach(k=>byId[k.id]=k);
+  const BLANK=/^[\s\p{P}]+$/u,STRAIGHT=/['"]/;
+  if(new Set(D.PARTS_SKIPPED).size!==D.PARTS_SKIPPED.length)err("PARTS_SKIPPED has duplicates");
+  D.PARTS_SKIPPED.forEach(id=>{if(!byId[id])err("PARTS_SKIPPED: not a card id: "+id);if(has(D.PARTS,id))err("Card is in both PARTS and PARTS_SKIPPED: "+id)});
+  D.CARDS.forEach(k=>{if(!has(D.PARTS,k.id)&&!D.PARTS_SKIPPED.includes(k.id))err("Card is in neither PARTS nor PARTS_SKIPPED: "+k.id)});
+  Object.keys(D.PARTS).forEach(id=>{
+    const e=D.PARTS[id],k=byId[id],at="PARTS "+id;
+    if(!k){err(at+": not a card id");return}
+    if(!e||!Array.isArray(e.parts)||!e.parts.length){err(at+": needs a non-empty parts array");return}
+    if(e.parts.some(p=>!Array.isArray(p)||p.length!==2||typeof p[0]!=="string"||!p[0]||typeof p[1]!=="string")){err(at+": each part must be [chunk, gloss], two strings, chunk not empty");return}
+    const joined=e.parts.map(p=>p[0]).join("");
+    if(joined!==k.nat)err(at+": chunks join to “"+joined+"”, card says “"+k.nat+"”");
+    if(e.parts.filter(p=>p[1]).length<2)err(at+": fewer than two glossed chunks; list it in PARTS_SKIPPED instead");
+    const enWords=new Set(k.en.match(/[A-Za-z]+/g)||[]);
+    e.parts.forEach(([chunk,gloss])=>{
+      const g=at+" “"+chunk+"”";
+      if(!gloss){if(!BLANK.test(chunk))err(g+": only punctuation, spaces and placeholders may have an empty gloss");return}
+      if(BLANK.test(chunk))err(g+": punctuation, spaces and placeholders get an empty gloss");
+      if(gloss!==gloss.trim())err(g+": gloss has leading or trailing spaces");
+      if(gloss.length>24)err(g+": gloss is over 24 characters: "+gloss);
+      if(STRAIGHT.test(gloss))err(g+": use curly quotes (’ “ ”) in the gloss");
+      (gloss.match(/[A-Za-z]+/g)||[]).forEach(w=>{if(/[A-Z]/.test(w)&&!enWords.has(w))err(g+": gloss must be lowercase (“"+w+"” is not capitalized in the card’s English)")});
+    });
+    Object.keys(e).forEach(f=>{if(f!=="parts"&&f!=="lit")err(at+": unknown field "+f)});
+    if(has(e,"lit")){
+      if(typeof e.lit!=="string"||!e.lit.trim())err(at+": lit must be a non-empty string");
+      else{if(e.lit.length>60)err(at+": lit is over 60 characters");if(STRAIGHT.test(e.lit))err(at+": use curly quotes (’ “ ”) in lit")}
+    }
+  });
+}
 
 const per=Object.keys(D.RAW).map(c=>c+" "+D.RAW[c].length).join(", ");
 if(errors.length){console.error(errors.length+" problem(s):\n- "+errors.join("\n- "));process.exit(1)}
