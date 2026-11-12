@@ -20,6 +20,7 @@ function renderPhrasebook(keepFocus){
     ${situationOf(k)?`<div class="e-sit">${h(situationOf(k))}</div>`:""}
     <div class="e-nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
     ${hearBtn(k.nat,k.c)}
+    ${k.cat==="dish"?dishPhoto(k,true):""}
     ${k.note?`<div class="e-note">${h(k.note)}</div>`:""}</div>`).join("")
     :`<p class="meta">Nothing matches. Clear the search or choose “All categories.”</p>`;
 }

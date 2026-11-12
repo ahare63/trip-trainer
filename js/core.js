@@ -43,6 +43,8 @@ const bul=c=>`<span class="bul" data-c="${c}">${C[c].code}</span>`;
 const hearBtn=(text,c,label)=>`<button class="hear" data-c="${c}" data-say="${h(text)}">${label||"Hear it"}</button>`;
 const signClass=k=>k.cat==="sign"?` sign sign-${h(SIGN_STYLE[k.id])}`:"";
 
+const dishPhoto=(k,lazy)=>PHOTOS[k.id]?`<img class="dish-photo" src="${h(PHOTOS[k.id].file)}" alt="${h(k.en)}"${lazy?' loading="lazy"':""}>`:"";
+
 /* ---------- audio ---------- */
 let voices=[];
 function loadVoices(){try{voices=window.speechSynthesis.getVoices()||[]}catch(e){voices=[]}}

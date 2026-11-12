@@ -13,6 +13,8 @@ A self-paced web app for learning travel Mandarin, Korean and Japanese from zero
 
 Open `index.html` in a browser. There is nothing to install and no build step.
 
+Dish photos come from Wikimedia Commons and carry their own licenses, listed with author and source on the Photo credits page (linked from the footer).
+
 Progress is saved in your browser. Audio uses your device’s built-in text-to-speech voices, so quality varies and a language may be missing on some devices.
 
 ## About the content
@@ -24,7 +26,8 @@ The cards, pronunciation spellings and notes were written with Claude (Anthropic
 ```
 index.html            page shell; lists the scripts in load order
 css/styles.css        all styles, light and dark themes
-js/data/              course content: one file per language, plus course structure and Hangul data
+js/data/              course content: one file per language, plus course structure, Hangul data and dish photo credits
+images/dishes/        dish photos, one JPEG per card id
 js/cards.js           turns the data rows into card objects
 js/core.js            saved progress, helpers, audio
 js/views/             one file per screen

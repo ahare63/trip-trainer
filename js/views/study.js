@@ -49,7 +49,7 @@ function renderStudy(){
     body=`<div class="ask">${k.cat==="dish"?"You see this on a menu. What is it?":"What does this say?"}</div>
       <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>
       ${k.cat==="dish"?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
-      ${session.shown?`<div class="note" style="border-top-style:solid"><div class="en" style="margin:0 0 6px">${h(k.en)}</div>${k.cat!=="dish"?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
+      ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${k.cat!=="dish"?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
   }else{
     const sit=situationOf(k);
     body=`${sit?`<div class="situation">${h(sit)}</div>`:""}<div class="ask">How do you say this in ${C[k.c].tongue}?</div><div class="en">${h(k.en)}</div>

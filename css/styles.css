@@ -163,6 +163,11 @@ table.key th{font-weight:600;white-space:nowrap}
 .entry .e-rom{font-style:italic;color:var(--muted);font-size:.9rem}
 .entry .e-note{font-size:.9rem;color:var(--muted);grid-column:1/-1;max-width:62ch}
 .entry .hear{align-self:start}
+.dish-photo{display:block;width:100%;max-width:320px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:var(--rule)}
+.entry .dish-photo{grid-column:1/-1;margin-top:6px}
+.note .dish-photo{margin-bottom:10px}
+.credits{list-style:none;padding:0;margin:14px 0 0}
+.credits li{padding:10px 0;border-top:1px solid var(--rule);font-size:.9rem;overflow-wrap:anywhere}
 .cols{display:grid;gap:16px;margin-top:18px}
 @media(min-width:760px){.cols{grid-template-columns:repeat(3,1fr)}}
 .col{background:var(--surface);border:1px solid var(--rule);border-top:8px solid var(--c);border-radius:14px;padding:16px}

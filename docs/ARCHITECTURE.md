@@ -22,15 +22,20 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 1. `js/data/course.js`: `C` (countries), `CATS` (category labels), `RECOG`, `WEEK_OF`, `RAW = {}`, `WEEKS`, `ESS`
 2. `js/data/tw.js`, `kr.js`, `jp.js`: fill `RAW.tw`, `RAW.kr`, `RAW.jp`
 3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `compose()`, `LETTERS`, `WORDS`
-4. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
-5. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
-6. `js/cards.js`: builds `CARDS`
-7. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `speak`
-8. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
-9. `js/views/*.js`: one `render…()` function per screen
-10. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`, `licenseURL()`
+5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
+6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
+7. `js/cards.js`: builds `CARDS`
+8. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
+9. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+10. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs)
+11. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
+
+## Images
+
+`images/dishes/<card-id>.jpg` holds the dish photos: JPEG, at most 640 px wide and 60 kB, from Wikimedia Commons under public domain, CC0, CC BY or CC BY-SA. Every dish card id is in `PHOTOS` or `PHOTOS_MISSING`, and `tools/validate.js` enforces this. `tools/bundle.js` inlines the files as data URIs. Images are local files only; never hotlink.
 
 ## Cards
 

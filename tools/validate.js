@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -49,7 +49,7 @@ D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
  ["wǒ duì … guòmǐn",["3L","4","4","3"]],["bú shì",["2","4"]],["zhēnzhū nǎichá",["1","1","3L","2"]],["Yī",["1"]],["Xīān",["1","1"]]
 ].forEach(([rom,want])=>{const got=D.spokenTones(rom);
   if(JSON.stringify(got)!==JSON.stringify(want))err("spokenTones(“"+rom+"”) gave "+JSON.stringify(got)+", expected "+JSON.stringify(want))});
-const VIEWS=["plan","essentials","study","scripts","phrasebook","customs"];
+const VIEWS=["plan","essentials","study","scripts","phrasebook","customs","credits"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");
   (w.tasks||[]).forEach(t=>{if(!VIEWS.includes(t[0]))err("Week "+(i+1)+" links to an unknown view: "+t[0])})});
@@ -85,6 +85,51 @@ situationLabels.forEach(l=>{
   if(!/^[A-Z]/.test(l)||l.split(" ").slice(1).some(w=>/^[A-Z]/.test(w)))err("Situation label is not sentence case: "+l);
   if(/\.$/.test(l))err("Situation label ends with a period: "+l);
 });
+
+// dish photos
+const LICENSES=["Public domain","CC0","CC0 1.0","CC BY 1.0","CC BY 2.0","CC BY 2.5","CC BY 3.0","CC BY 4.0","CC BY-SA 1.0","CC BY-SA 2.0","CC BY-SA 2.5","CC BY-SA 3.0","CC BY-SA 4.0"];
+const MAX_KB=60,MAX_W=640;
+function jpegWidth(buf){
+  if(buf[0]!==0xFF||buf[1]!==0xD8)return null;
+  let i=2;
+  while(i+9<buf.length){
+    if(buf[i]!==0xFF){i++;continue}
+    const m=buf[i+1];
+    if(m===0xFF){i++;continue}
+    if(m===0xD8||(m>=0xD0&&m<=0xD7)||m===0x01){i+=2;continue}
+    const len=buf.readUInt16BE(i+2);
+    if(m>=0xC0&&m<=0xCF&&m!==0xC4&&m!==0xC8&&m!==0xCC)return buf.readUInt16BE(i+7);
+    i+=2+len;
+  }
+  return null;
+}
+const dishIds=new Set(D.CARDS.filter(k=>k.cat==="dish").map(k=>k.id));
+Object.keys(D.PHOTOS).forEach(id=>{
+  const p=D.PHOTOS[id],at="Photo "+id;
+  if(!dishIds.has(id))err(at+": not a dish card id");
+  if(D.PHOTOS_MISSING.includes(id))err(at+": is in both PHOTOS and PHOTOS_MISSING");
+  if(p.file!=="images/dishes/"+id+".jpg")err(at+": file must be images/dishes/"+id+".jpg");
+  const f=path.join(root,p.file||"");
+  if(!p.file||!fs.existsSync(f))err(at+": image file is missing");
+  else{
+    const buf=fs.readFileSync(f);
+    if(buf.length>MAX_KB*1024)err(at+": image is "+(buf.length/1024).toFixed(1)+" kB, limit "+MAX_KB);
+    const w=jpegWidth(buf);
+    if(w===null)err(at+": not a readable JPEG");
+    else if(w>MAX_W)err(at+": image is "+w+" px wide, limit "+MAX_W);
+  }
+  if(!LICENSES.includes(p.license))err(at+": license “"+p.license+"” is not in the allowed list");
+  else if(p.license!=="Public domain"&&!/^https:\/\/creativecommons\.org\/(licenses|publicdomain)\//.test(D.licenseURL(p.license)))err(at+": no license link for “"+p.license+"”");
+  if(!p.title||!String(p.title).trim())err(at+": title is missing");
+  if(!p.author||!String(p.author).trim())err(at+": author is missing");
+  if(!/^https:\/\/commons\.wikimedia\.org\/wiki\/File:\S+$/.test(p.source||""))err(at+": source must be a https://commons.wikimedia.org/wiki/File: URL");
+});
+[["CC BY-SA 2.5","https://creativecommons.org/licenses/by-sa/2.5/"],["CC BY 4.0","https://creativecommons.org/licenses/by/4.0/"],
+ ["CC0","https://creativecommons.org/publicdomain/zero/1.0/"],["CC0 1.0","https://creativecommons.org/publicdomain/zero/1.0/"],["Public domain",""]
+].forEach(([l,want])=>{const got=D.licenseURL(l);if(got!==want)err("licenseURL(“"+l+"”) gave “"+got+"”, expected “"+want+"”")});
+D.PHOTOS_MISSING.forEach(id=>{if(!dishIds.has(id))err("PHOTOS_MISSING: not a dish card id: "+id)});
+if(new Set(D.PHOTOS_MISSING).size!==D.PHOTOS_MISSING.length)err("PHOTOS_MISSING has duplicates");
+dishIds.forEach(id=>{if(!D.PHOTOS[id]&&!D.PHOTOS_MISSING.includes(id))err("Dish card "+id+" is in neither PHOTOS nor PHOTOS_MISSING")});
 
 const per=Object.keys(D.RAW).map(c=>c+" "+D.RAW[c].length).join(", ");
 if(errors.length){console.error(errors.length+" problem(s):\n- "+errors.join("\n- "));process.exit(1)}
