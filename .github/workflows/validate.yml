@@ -9,4 +9,5 @@ jobs:
         with:
           node-version: 20
       - run: node tools/validate.js
+      - run: node tools/test-trip.js
       - run: node tools/bundle.js

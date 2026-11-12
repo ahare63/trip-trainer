@@ -40,16 +40,16 @@ function renderStudy(){
     <div class="row">${more?`<button class="btn" data-ahead="1">Learn 8 more new cards</button>`:""}${any?`<button class="btn ghost" data-practice="1">Practice 12 at random</button>`:""}<a class="btn ghost" href="#scripts">Open the Hangul drill</a></div></div>`;
     return;
   }
-  const it=session.q[session.i],k=it.k,recog=RECOG[k.cat],isNew=!state.cards[k.id]&&!it.retry;
+  const it=session.q[session.i],k=it.k,recog=isRecog(k),isNew=!state.cards[k.id]&&!it.retry;
   const answer=`<div class="nat" lang="${C[k.c].hl}">${h(k.nat)}</div>
     <div class="say"><small>Sounds like</small>${h(k.say)}</div>
     <div class="rom"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`;
   let body;
   if(recog){
-    body=`<div class="ask">${k.cat==="dish"?"You see this on a menu. What is it?":"What does this say?"}</div>
+    body=`<div class="ask">${isDish(k)?"You see this on a menu. What is it?":"What does this say?"}</div>
       <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>
-      ${k.cat==="dish"?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
-      ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${k.cat!=="dish"?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
+      ${isDish(k)?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
+      ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${!isDish(k)?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
   }else{
     const sit=situationOf(k);
     body=`${sit?`<div class="situation">${h(sit)}</div>`:""}<div class="ask">How do you say this in ${C[k.c].tongue}?</div><div class="en">${h(k.en)}</div>

@@ -3,11 +3,25 @@
 /* ---------- state ---------- */
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
-function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0}}
+function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0,trip:[],hold:[],itin:""}}
+/* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
+function cleanCard(x){
+  if(!x||typeof x!=="object"||!C[x.c])return null;
+  const t=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
+  const k={id:/^trip-[a-z0-9]{8}$/.test(x.id)?x.id:"trip-"+Math.random().toString(36).slice(2).padEnd(8,"0").slice(0,8),c:x.c,
+    kind:["place","dish","phrase"].includes(x.kind)?x.kind:"phrase",en:t(x.en,90),nat:t(x.nat,80),rom:t(x.rom,160),say:t(x.say,160),note:t(x.note,300)};
+  return k.en&&k.nat?k:null}
+function cleanList(a){const seen={};
+  return (Array.isArray(a)?a:[]).map(cleanCard).filter(k=>k&&!seen[k.id]&&(seen[k.id]=1)).slice(0,150)}
+function syncTrip(){
+  for(let i=CARDS.length-1;i>=0;i--)if(CARDS[i].cat==="trip")CARDS.splice(i,1);
+  state.trip.forEach((x,i)=>CARDS.push({id:x.id,c:x.c,wk:0,cat:"trip",kind:x.kind,en:x.en,nat:x.nat,rom:x.rom,say:x.say,note:x.note,ord:i}))}
 function normalize(s){const b=blank();if(!s||typeof s!=="object")return b;
-  return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,updated:+s.updated||0}}
+  return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,updated:+s.updated||0,
+    trip:cleanList(s.trip),hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):""}}
 let state=blank();
 try{const s=localStorage.getItem(KEY);if(s)state=normalize(JSON.parse(s))}catch(e){}
+syncTrip();
 let docRef=null,saving=false,dirty=false,saveTimer=null;
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 function commit(){state.updated=Date.now();saveLocal();if(docRef){dirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(flush,1500)}}
@@ -26,7 +40,7 @@ async function connect(){
     docRef=ref;setSync(true);
     if(snap.exists){
       const remote=normalize(JSON.parse(JSON.stringify(snap.data())));
-      if(remote.updated>state.updated){state=remote;saveLocal();session=null;render()}
+      if(remote.updated>state.updated){state=remote;syncTrip();saveLocal();session=null;if(!trip.busy){trip.text=null;render()}}
       else if(state.updated>remote.updated){dirty=true;flush()}
     }else if(state.updated){dirty=true;flush()}
   }catch(e){docRef=null}
