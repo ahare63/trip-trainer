@@ -41,6 +41,7 @@ let toastTimer;
 function toast(msg){const t=$("#toast");t.textContent=msg;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",4500)}
 const bul=c=>`<span class="bul" data-c="${c}">${C[c].code}</span>`;
 const hearBtn=(text,c,label)=>`<button class="hear" data-c="${c}" data-say="${h(text)}">${label||"Hear it"}</button>`;
+const signClass=k=>k.cat==="sign"?` sign sign-${h(SIGN_STYLE[k.id])}`:"";
 
 /* ---------- audio ---------- */
 let voices=[];

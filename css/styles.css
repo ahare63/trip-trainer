@@ -109,6 +109,14 @@ main{padding:28px 0 60px}
 .hear{border:1.5px solid var(--c,var(--ink));color:var(--c,var(--ink));background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:600;white-space:nowrap}
 .hear::before{content:"▶ ";font-size:.7em}
 
+/* signs: generic plates in the palette, not copies of any real signage */
+.sign{display:inline-block;max-width:100%;padding:4px 14px;line-height:1.25;align-self:flex-start}
+.sign-board{background:var(--ink);color:var(--paper);border-radius:8px}
+.sign-door{background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-bottom-width:8px;border-radius:6px}
+.sign-notice{background:var(--surface);color:var(--ink);border:2px solid var(--warn);border-radius:6px}
+.sign-plaque{background:var(--rule);color:var(--ink);border-radius:6px;padding:8px 22px;box-shadow:inset 0 0 0 2px var(--surface)}
+.sign-compass{background:var(--paper);color:var(--kr);border:2px solid var(--kr);border-radius:999px;padding:4px 18px}
+
 /* scripts */
 .sub{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px;margin-top:10px}
