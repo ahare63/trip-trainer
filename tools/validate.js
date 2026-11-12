@@ -10,9 +10,9 @@ const errors=[],err=m=>errors.push(m);
 for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a missing file: "+s);
 
 // load the data files and the card builder in a sandbox
-const dataFiles=srcs.filter(s=>s.startsWith("js/data/")).concat("js/cards.js");
+const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -36,6 +36,19 @@ for(const c of Object.keys(D.RAW)){
 }
 D.CARDS.forEach(k=>{if(ids.has(k.id))err("Duplicate card id: "+k.id);ids.add(k.id)});
 const pairs={};D.CARDS.forEach(k=>{const p=k.c+"|"+k.cat+"|"+k.en;if(pairs[p])err("Two cards share country, category and English text: "+p);pairs[p]=1});
+const HAN_G=/[\u4e00-\u9fff]/g;
+D.CARDS.filter(k=>k.c==="tw").forEach(k=>{
+  const n=(k.nat.match(HAN_G)||[]).length,at="tw “"+k.en+"” ("+k.rom+")";
+  let t,s;try{t=D.toneMarks(k.rom);s=D.spokenTones(k.rom)}catch(e){err(at+": "+e.message);return}
+  if(t.length!==n)err(at+": "+t.length+" syllable(s) in pinyin but "+n+" Chinese character(s)");
+  if(s.length!==t.length)err(at+": spoken tones give "+s.length+" syllable(s), written pinyin "+t.length);
+});
+// spoken contours: third-tone sandhi, low third before other tones, light-syllable pitch from the tone before it
+[["nǐ hǎo",["2","3"]],["wǒ hěn hǎo",["2","2","3"]],["hǎochī",["3L","1"]],["kěyǐ shuākǎ ma",["2","3L","1","3L","n4"]],
+ ["xièxie",["4","n1"]],["duìbuqǐ",["4","n1","3"]],["nǐ huì shuō Yīngwén ma",["3L","4","1","1","2","n3"]],
+ ["wǒ duì … guòmǐn",["3L","4","4","3"]],["bú shì",["2","4"]],["zhēnzhū nǎichá",["1","1","3L","2"]],["Yī",["1"]],["Xīān",["1","1"]]
+].forEach(([rom,want])=>{const got=D.spokenTones(rom);
+  if(JSON.stringify(got)!==JSON.stringify(want))err("spokenTones(“"+rom+"”) gave "+JSON.stringify(got)+", expected "+JSON.stringify(want))});
 const VIEWS=["plan","essentials","study","scripts","phrasebook","customs","credits"];
 if(D.WEEKS.length!==8)err("WEEKS must have 8 entries");
 D.WEEKS.forEach((w,i)=>{if(!w.t||!w.d||!Array.isArray(w.tasks))err("Week "+(i+1)+" is incomplete");
@@ -45,6 +58,33 @@ D.ESS.forEach(r=>Object.keys(D.C).forEach(c=>{
   (r[1][c]||[]).forEach(en=>{const n=D.CARDS.filter(k=>k.c===c&&k.en===en).length;if(n!==1)err("Essentials “"+r[0]+"” ("+c+"): “"+en+"” matches "+n+" cards, needs exactly 1")})}));
 D.LETTERS.forEach(l=>{if((l[4]==="v"?D.MED:D.INIT).indexOf(l[0])<0)err("Hangul letter not in INIT/MED: "+l[0]);if(![1,2,3].includes(l[3]))err("Hangul letter set must be 1 to 3: "+l[0])});
 D.WORDS.forEach(w=>{if(!/^[\uac00-\ud7af]+$/.test(w[0]))err("Decoding word must be Hangul only: "+w[0]);if(![1,2,3].includes(w[3]))err("Decoding word set must be 1 to 3: "+w[0])});
+if(!D.SIGN_STYLE)err("js/data/signs.js must be loaded in index.html and define SIGN_STYLE");
+else{
+  const STYLES=["board","door","notice","plaque","compass"],has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+  D.CARDS.filter(k=>k.cat==="sign").forEach(k=>{if(!has(D.SIGN_STYLE,k.id))err("Sign card has no SIGN_STYLE entry: "+k.id)});
+  Object.keys(D.SIGN_STYLE).forEach(id=>{
+    if(!ids.has(id))err("SIGN_STYLE key is not a card id: "+id);
+    if(!STYLES.includes(D.SIGN_STYLE[id]))err("SIGN_STYLE "+id+" must be one of "+STYLES.join(", ")+", not "+D.SIGN_STYLE[id]);
+  });
+}
+
+const SITUATION_CATS=["basics","order","num","around","help"];
+const cardIds=new Set(D.CARDS.map(k=>k.id));
+Object.keys(D.SITUATION_BY_CAT).forEach(c=>{if(!D.CATS[c])err("SITUATION_BY_CAT key is not a category: "+c)});
+Object.keys(D.SITUATION).forEach(id=>{if(!cardIds.has(id))err("SITUATION key is not a card id: "+id)});
+D.CARDS.forEach(k=>{
+  const s=D.situationOf(k);
+  if(D.RECOG[k.cat]){if(s!=="")err("Recognition card should have no situation label: "+k.id)}
+  else if(SITUATION_CATS.includes(k.cat)){if(typeof s!=="string"||!s.trim())err("Card has no situation label: "+k.id)}
+});
+const situationLabels=new Set([...Object.values(D.SITUATION_BY_CAT),...Object.values(D.SITUATION)]);
+if(situationLabels.size>10)err("Too many distinct situation labels ("+situationLabels.size+"), at most 10");
+situationLabels.forEach(l=>{
+  if(typeof l!=="string"||!l.trim()){err("Situation label is empty");return}
+  if(l.length>32)err("Situation label over 32 characters: "+l);
+  if(!/^[A-Z]/.test(l)||l.split(" ").slice(1).some(w=>/^[A-Z]/.test(w)))err("Situation label is not sentence case: "+l);
+  if(/\.$/.test(l))err("Situation label ends with a period: "+l);
+});
 
 // dish photos
 const LICENSES=["Public domain","CC0","CC0 1.0","CC BY 1.0","CC BY 2.0","CC BY 2.5","CC BY 3.0","CC BY 4.0","CC BY-SA 1.0","CC BY-SA 2.0","CC BY-SA 2.5","CC BY-SA 3.0","CC BY-SA 4.0"];

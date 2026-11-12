@@ -6,7 +6,7 @@ function renderEssentials(){
   if(essC==null){const w=curWeek();essC=w<=3?"tw":w<=6?"kr":w===7?"jp":"all"}
   const cs=essC==="all"?["tw","kr","jp"]:[essC];
   const cell=k=>`<div class="entry" data-c="${k.c}"><div><div class="e-en">${essC==="all"?bul(k.c)+" ":""}<span class="meta" style="font-weight:400">${h(k.en)}</span></div>
-    <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div></div>
+    <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
     ${hearBtn(k.nat,k.c)}${k.note?`<div class="e-note">${h(k.note)}</div>`:""}</div>`;
   $("#v-essentials").innerHTML=`<h2>Essentials</h2>
   <p class="lede">The eight phrases that carry most encounters. They’re always here in full, whatever week you’re in.</p>

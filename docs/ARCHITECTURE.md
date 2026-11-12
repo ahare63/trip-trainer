@@ -22,11 +22,14 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 1. `js/data/course.js`: `C` (countries), `CATS` (category labels), `RECOG`, `WEEK_OF`, `RAW = {}`, `WEEKS`, `ESS`
 2. `js/data/tw.js`, `kr.js`, `jp.js`: fill `RAW.tw`, `RAW.kr`, `RAW.jp`
 3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `compose()`, `LETTERS`, `WORDS`
-4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`
-5. `js/cards.js`: builds `CARDS`
-6. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `dishPhoto`, `speak`
-7. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs)
-8. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`, `licenseURL()`
+5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
+6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
+7. `js/cards.js`: builds `CARDS`
+8. `js/core.js`: `state`, saving, `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
+9. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
+10. `js/views/*.js`: one `render…()` function per screen (`credits.js` is the photo credits page, linked from the footer rather than the tabs)
+11. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 

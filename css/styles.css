@@ -96,18 +96,30 @@ main{padding:28px 0 60px}
 .card{background:var(--surface);border:1px solid var(--rule);border-top:8px solid var(--c);border-radius:14px;padding:22px 20px 20px;margin-top:18px;min-height:320px;display:flex;flex-direction:column}
 .card .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
 .card .ask{font-size:.9rem;color:var(--muted);margin-top:22px}
+.card .situation{font-size:.9rem;font-weight:600;color:var(--muted);margin-top:22px}
+.card .situation + .ask{margin-top:6px}
 .card .en{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6vw,2.1rem);line-height:1.15;margin-top:4px}
 .nat{font-size:clamp(2.2rem,10vw,3.4rem);line-height:1.2;margin-top:6px;font-weight:600;word-break:keep-all}
 .say{font-size:1.25rem;font-weight:600;margin-top:8px}
 .say small,.rom small{font-weight:400;font-size:.78rem;color:var(--muted);display:block}
 .rom{font-style:italic;color:var(--muted);margin-top:6px}
 .rom small{font-style:normal}
+.tone-line{margin-top:4px;line-height:0}
+.tone-line svg{max-width:100%;height:14px}
 .note{margin-top:14px;padding-top:12px;border-top:1px dashed var(--rule);font-size:.95rem;max-width:56ch}
 .card .acts{margin-top:auto;padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .card .acts .wide{grid-column:1/-1}
 .card .acts .btn{text-align:center}
 .hear{border:1.5px solid var(--c,var(--ink));color:var(--c,var(--ink));background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:600;white-space:nowrap}
 .hear::before{content:"▶ ";font-size:.7em}
+
+/* signs: generic plates in the palette, not copies of any real signage */
+.sign{display:inline-block;max-width:100%;padding:4px 14px;line-height:1.25;align-self:flex-start}
+.sign-board{background:var(--ink);color:var(--paper);border-radius:8px}
+.sign-door{background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-bottom-width:8px;border-radius:6px}
+.sign-notice{background:var(--surface);color:var(--ink);border:2px solid var(--warn);border-radius:6px}
+.sign-plaque{background:var(--rule);color:var(--ink);border-radius:6px;padding:8px 22px;box-shadow:inset 0 0 0 2px var(--surface)}
+.sign-compass{background:var(--paper);color:var(--kr);border:2px solid var(--kr);border-radius:999px;padding:4px 18px}
 
 /* scripts */
 .sub{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 4px}
@@ -145,6 +157,7 @@ table.key th{font-weight:600;white-space:nowrap}
 @media(min-width:680px){.filters{grid-template-columns:auto 1fr 1fr;align-items:center}}
 .entry{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:14px 0 14px 14px;border-top:1px solid var(--rule);border-left:5px solid var(--c)}
 .entry .e-en{font-weight:600}
+.entry .e-sit{font-size:.85rem;color:var(--muted)}
 .entry .e-nat{font-size:1.45rem;line-height:1.3}
 .entry .e-say{font-weight:600}
 .entry .e-rom{font-style:italic;color:var(--muted);font-size:.9rem}
