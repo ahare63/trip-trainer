@@ -245,6 +245,13 @@ const whyOf=(rep,nat)=>{const o=rep.out.find(x=>x.card&&x.card.nat===nat);return
     D.setKey("");
     eq(D.getKey(),"","forgetting the key removes it");
   }
+  /* ===== country keys come only from C itself ===== */
+  {
+    const card=c=>({c,kind:"place",en:"Somewhere",nat:"某處",rom:"mǒuchù",say:"moh-choo",note:""});
+    ok(D.cleanCard(card("tw")),"a card for a real country is kept");
+    ["constructor","toString","__proto__","hasOwnProperty","valueOf"].forEach(c=>eq(D.cleanCard(card(c)),null,"a card whose country is the inherited key “"+c+"” is dropped"));
+    eq(D.normalize({trip:[card("constructor"),card("tw")]}).trip.length,1,"saved data with an inherited-key country loses only that card");
+  }
   if(fails.length){console.error(fails.length+" of "+count+" checks failed:\n- "+fails.join("\n- "));process.exit(1)}
   console.log("OK: "+count+" trip-deck checks passed");
 })().catch(e=>{console.error("FAIL: "+(e&&e.stack||e));process.exit(1)});
