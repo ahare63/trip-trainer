@@ -24,6 +24,82 @@ function quickFrom(q,c){
   if(C[c])trip.quick.c=c;
   trip.focus="quick-text";location.hash="trip"}
 function addByHand(){const f=trip.hand;return addOne("hand",f,(ask,step)=>addPlaceByHand({c:f.c,en:f.en,nat:f.nat},ask,CARDS,state.hold,step))}
+/* reading a booking screenshot (js/booking.js); the file itself is only ever a local variable of bookingRead() */
+const bk={places:null,dropped:0,res:null,got:null,why:"",err:""};
+const bkReset=()=>{bk.places=null;bk.dropped=0;bk.res=null;bk.got=null;bk.why="";bk.err=""};
+async function bookingRead(file){
+  if(trip.busy||!file)return;
+  bkReset();trip.busy=true;trip.who="shot";trip.step="Reading the screenshot. This can take a minute.";renderTrip();
+  await aiReady;
+  const stop=aiStop();
+  const r=await readBooking(file,stop?async()=>{throw {code:stop}}:askJSON);
+  bk.why=r.why;bk.err=r.error?aiMessage(r.error):"";
+  if(!r.why&&!r.error){bk.places=r.places.map(p=>Object.assign({on:true},p));bk.dropped=r.dropped}
+  trip.busy=false;trip.who="";trip.step="";renderTrip();
+}
+async function bookingAdd(){
+  if(trip.busy||!bk.places)return;
+  const picked=bk.places.filter(p=>p.on).map(p=>({en:p.en,nat:p.nat,kind:p.kind,c:p.c}));
+  if(!picked.length){bk.err="Tick at least one place.";renderTrip();return}
+  bk.err="";trip.busy=true;trip.who="shot";trip.step="Getting ready.";renderTrip();
+  await aiReady;
+  const stop=aiStop();
+  const res=await addFromBooking(picked,stop?async()=>{throw {code:stop}}:askJSON,CARDS,state.hold,(s,p)=>{
+    trip.step=p?"“"+p.en+"”: "+(TRIP_ONE_STEP[s]||""):"Places without a local name: "+(TRIP_STEP[s]||"");renderTrip()});
+  const got=applyBooking(res);
+  if(got.added||got.held)session=null;
+  bk.res=res;bk.got=got;
+  if(res.error)bk.err=got.added||got.held?"A request failed, so the places after it weren’t added. Try them again later.":aiMessage(res.error);
+  trip.busy=false;trip.who="";trip.step="";renderTrip();
+}
+const bkPlace=(p,inner)=>`<li class="bk-item" data-c="${p.c}">${inner}</li>`;
+const bkWhat=p=>`<span class="bk-en">${h(p.en)}</span><span class="bk-st meta">${C[p.c].name}, ${h(p.kind)}</span>`;
+const bkNat=(c,nat)=>`<div class="bk-nat" lang="${C[c].hl}">${h(nat)}</div>`;
+function bookingResults(){
+  const res=bk.res,rep=res.gen.report;
+  const row=(p,nat,st,cls)=>bkPlace(p,`<div>${bkWhat(p)}${nat?bkNat(p.c,nat):""}<div class="bk-st ${cls}">${st}</div></div>`);
+  let out=`<h4 class="bk-h">Results</h4><ul class="bk-list">`
+    +res.results.map(r=>row(r.place,r.place.nat,r.card?"Added to your deck.":r.error?h(aiMessage(r.error)):"Not added. "+h(r.why),r.card?"good":"err")).join("")
+    +res.gen.places.map(p=>row(p,"","No local name printed, so Claude wrote one. See below.","meta")).join("")+`</ul>`;
+  if(res.gen.places.length){
+    let g;
+    if(!rep)g=`<p class="bk-st err">${h(SHOT_NOT_TRIED)}</p>`;
+    else if(rep.error)g=`<p class="bk-st err">${h(aiMessage(rep.error))}</p>`;
+    else if(rep.blocked)g=`<p class="bk-st err">The generator got only ${rep.hits} of ${rep.probes} known answers right, so none of its cards were trusted. Try again.</p>`;
+    else{
+      g=rep.added.map(k=>row(k,k.nat,"Added to your deck.","good")).join("")
+        +rep.held.map(k=>row(k,k.nat,"Waiting under “Confirm these names.” Check it against your booking.","warn")).join("")
+        +rep.out.map(o=>row(o.card,o.card.nat,"Left out: "+h(o.why),"err")).join("");
+      g=g?`<ul class="bk-list">${g}</ul>`:`<p class="bk-st meta">Claude returned no cards for these.</p>`}
+    out+=`<h4 class="bk-h">What Claude wrote for the places without a local name</h4>`+g}
+  return out}
+function bookingHTML(){
+  const off=trip.busy?" disabled":"";
+  let body="";
+  if(bk.res){
+    const g=bk.got;
+    body=bookingResults()+`<p class="${g.added||g.held?"good":"meta"}" role="status" style="margin-top:12px">${g.added||g.held?`Added ${g.added} to your deck${g.held?`, ${g.held} waiting for you to confirm a name`:""}.`:"Nothing was added."}</p>`;
+  }else if(bk.places&&bk.places.length){
+    body=`<h4 class="bk-h">Found in this screenshot</h4><p class="meta" style="margin:4px 0 0;max-width:62ch">Untick anything you don’t want as a card. Names printed in the local script are used exactly as printed.</p>
+      <ul class="bk-list">${bk.places.map((p,i)=>bkPlace(p,`<label><input type="checkbox" data-bkpick="${i}"${p.on?" checked":""}${off}><span>${bkWhat(p)}
+        ${p.nat?bkNat(p.c,p.nat):`<span class="bk-st meta">No local name printed. Claude writes one and checks it, and asks you to confirm a business name it isn’t sure of.</span>`}</span></label>`)).join("")}</ul>
+      ${bk.dropped?`<p class="meta" style="margin-top:8px">Left out ${bk.dropped} other ${bk.dropped===1?"item":"items"} from Claude’s reply that ${bk.dropped===1?"wasn’t a usable place name":"weren’t usable place names"}.</p>`:""}
+      <div class="row" style="margin-top:12px"><button class="btn" data-bk="add"${off}>${trip.busy&&trip.who==="shot"?"Adding…":"Add ticked places"}</button><button class="btn ghost" data-bk="clear"${off}>Clear</button><span class="meta" aria-live="polite">${trip.who==="shot"?h(trip.step):""}</span></div>`;
+  }else if(bk.places){
+    body=`<p class="err" role="status" style="margin-top:12px;max-width:62ch">Nothing found. Claude saw no hotels, restaurants or other places in Taiwan, Korea or Japan in this screenshot.</p>`;
+  }
+  const pick=!bk.places||!bk.places.length||bk.res;
+  return `<div class="panel" id="booking"><h3>Read a booking screenshot</h3>
+    <p class="meta" style="margin-top:6px;max-width:62ch">Choose a screenshot of a hotel or restaurant confirmation, PNG or JPEG up to 5 MB. Claude lists the places it names in Taiwan, Korea or Japan and you pick which become cards. It is told to skip people’s names, confirmation numbers, prices, payment and contact details. The image is sent for this one reading and isn’t saved.</p>
+    <input type="file" id="bk-file" accept="image/png,image/jpeg" hidden>
+    ${body}
+    ${pick?`<div class="row" style="margin-top:12px"><button class="btn${bk.places||bk.why||bk.err?" ghost":""}" data-bk="pick"${off}>${trip.busy&&trip.who==="shot"?"Reading…":bk.places||bk.why||bk.err?"Choose another":"Choose a screenshot"}</button>${bk.res||bk.places?`<button class="btn ghost" data-bk="clear"${off}>Clear</button>`:""}<span class="meta" aria-live="polite">${trip.who==="shot"?h(trip.step):""}</span></div>`:""}
+    ${bk.why?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(bk.why)}</p>`:""}${bk.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(bk.err)}</p>`:""}</div>`}
+function bookingAct(a){
+  if(trip.busy)return;
+  if(a==="pick"){const i=$("#bk-file");if(i)i.click();return}
+  if(a==="add"){bookingAdd();return}
+  if(a==="clear"){bkReset();renderTrip()}}
 const TRIP_STEP={write:"Writing cards for your trip. This can take a minute.",
   read:"A second model is reading each card without seeing the English.",
   compare:"Comparing the two readings."};
@@ -68,7 +144,7 @@ function renderTrip(){
     <div class="row"><input class="ta" id="trip-key" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Anthropic API key" value="${h(getKey())}" style="max-width:420px">${getKey()?`<button class="btn ghost small" data-keyclear="1">Forget this key</button>`:""}</div></div>`:"";
   $("#v-trip").innerHTML=`<h2>Your trip</h2>
   ${timelineHTML()}
-  <p class="lede">Paste an itinerary, or just list places: hotels, restaurants, stations, neighborhoods. Claude writes cards for them, and each card has to pass the checks below before it joins your deck. Build once from your plans, then add each new booking with “Add a place by hand” or “Quick add” below. Building again rewrites cards for the whole list and can add reworded copies of ones you already have.</p>
+  <p class="lede">Paste an itinerary, or just list places: hotels, restaurants, stations, neighborhoods. Claude writes cards for them, and each card has to pass the checks below before it joins your deck. Build once from your plans, then add each new booking with “Read a booking screenshot,” “Add a place by hand” or “Quick add” below. Building again rewrites cards for the whole list and can add reworded copies of ones you already have.</p>
   ${keyBox}
   <div style="margin-top:18px"><textarea class="ta" id="trip-text" aria-label="Your itinerary or list of places" maxlength="4000" ${trip.busy?"disabled":""} placeholder="Taipei, 4 nights, hotel near Zhongshan station&#10;Day trip to Jiufen&#10;Seoul, 5 nights in Hongdae&#10;KTX to Busan, staying by Haeundae Beach&#10;Tokyo, 2 nights in Asakusa">${h(trip.text)}</textarea></div>
   <div class="row" style="margin-top:12px"><button class="btn" data-build="1" ${trip.busy?"disabled":""}>${trip.busy?"Building…":"Build cards from this"}</button><span class="meta" aria-live="polite">${trip.who==="build"?h(trip.step):""}</span></div>
@@ -76,6 +152,7 @@ function renderTrip(){
   ${rep}
   ${state.hold.length?`<div class="panel"><h3>Confirm these names</h3><p class="meta" style="margin-top:6px;max-width:62ch">These are business names Claude wasn’t certain of in the local script. Compare each one with your booking confirmation or a map before adding it.</p>
     ${state.hold.map(k=>tripEntry(k,`<button class="btn small" data-holdadd="${h(k.id)}">It matches, add it</button><button class="btn ghost small" data-holddrop="${h(k.id)}">Discard</button>`)).join("")}</div>`:""}
+  ${bookingHTML()}
   <div class="panel"><h3>Add a place by hand</h3>
     <p class="meta" style="margin-top:6px;max-width:62ch">Paste a name exactly as it appears on your booking or a map. Claude writes only the pronunciation and never changes the name, so nothing is guessed.</p>
     <div class="fgrid"><label class="fld">Country<select class="ta" id="hand-c" ${trip.busy?"disabled":""}>${countryOptions(hand.c)}</select></label>

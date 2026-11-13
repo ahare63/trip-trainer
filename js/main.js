@@ -37,6 +37,7 @@ document.addEventListener("click",e=>{
   if(d.build){buildTrip();return}
   if(d.handadd){addByHand();return}
   if(d.quickadd){quickAddNow();return}
+  if(d.bk){bookingAct(d.bk);return}
   if(d.quickfrom!=null){quickFrom(pb.q.trim(),pb.c);return}
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
   if(d.holdadd||d.holddrop){if(resolveHold(d.holdadd||d.holddrop,!!d.holdadd)){session=null;renderTrip()}return}
@@ -59,6 +60,8 @@ document.addEventListener("change",e=>{
   if(e.target.id==="hand-c"){trip.hand.c=e.target.value;const n=$("#hand-nat");if(n){n.lang=C[trip.hand.c].hl;n.placeholder=HAND_NAT[trip.hand.c]}}
   if(e.target.id==="quick-c")trip.quick.c=e.target.value;
   if(e.target.id==="tl-file"){const f=e.target.files[0];e.target.value="";tlFilePicked(f)}
+  if(e.target.id==="bk-file"){const f=e.target.files[0];e.target.value="";bookingRead(f)}
+  if(e.target.dataset.bkpick!=null&&bk.places){const p=bk.places[+e.target.dataset.bkpick];if(p)p.on=e.target.checked}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
 document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value;if(e.target.id==="talk-text")tk.text=e.target.value});
