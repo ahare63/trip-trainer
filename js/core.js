@@ -4,9 +4,11 @@
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
 function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{}}}
+/* a country key of C; C[c] alone would also accept inherited keys such as "constructor" */
+const isCountry=c=>typeof c==="string"&&Object.prototype.hasOwnProperty.call(C,c);
 /* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
 function cleanCard(x){
-  if(!x||typeof x!=="object"||!C[x.c])return null;
+  if(!x||typeof x!=="object"||!isCountry(x.c))return null;
   const t=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
   const k={id:/^trip-[a-z0-9]{8}$/.test(x.id)?x.id:"trip-"+Math.random().toString(36).slice(2).padEnd(8,"0").slice(0,8),c:x.c,
     kind:["place","dish","phrase"].includes(x.kind)?x.kind:"phrase",en:t(x.en,90),nat:t(x.nat,80),rom:t(x.rom,160),say:t(x.say,160),note:t(x.note,300)};

@@ -192,7 +192,7 @@ const TRIP_FULL="Your trip deck is full ("+TRIP_MAX+" cards). Remove some before
 const tripFull=existing=>(existing||[]).filter(k=>k.cat==="trip").length>=TRIP_MAX;
 /* The checks that need no model, in the order they are told to the learner. Returns null to go on, or a refusal. */
 function tripPrecheck(c,nat,existing,hold){
-  if(!C[c])return tripFail("Choose a country.");
+  if(!isCountry(c))return tripFail("Choose a country.");
   if(!nat)return tripFail("Paste the name in the local script.");
   if(nat.length>80)return tripFail("That is too long for one card. Names and phrases can be 80 characters at most.");
   if(tripFull(existing))return tripFail(TRIP_FULL);
@@ -236,7 +236,7 @@ function addPlaceByHand(input,ask,existing,hold,onStep){
 async function quickAdd(input,ask,existing,hold,onStep){
   input=input||{};
   const c=input.c,text=tripText(input.text);
-  if(!C[c])return tripFail("Choose a country.");
+  if(!isCountry(c))return tripFail("Choose a country.");
   if(!text)return tripFail("Type a word or phrase to add.");
   if(TRIP_CJK.test(text))return tripNativeCard(c,"",text,ask,existing,hold,onStep);
   if(!/[A-Za-z]/.test(text))return tripFail("Type the word or phrase in English, or paste it in the local script.");

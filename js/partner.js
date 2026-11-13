@@ -28,7 +28,7 @@ function talkVocab(c,seen,cards,cats){
   return (cards||[]).map((k,i)=>({k,i})).filter(x=>x.k.c===c&&has(x.k.id))
     .sort((a,b)=>pri(a.k.cat)-pri(b.k.cat)||box(b.k)-box(a.k)||a.i-b.i).slice(0,TALK_VOCAB).map(x=>x.k)}
 function talkReady(def,seen,cards){
-  if(!def||!C[def.c])return "Choose a scene.";
+  if(!def||!isCountry(def.c))return "Choose a scene.";
   const n=talkVocab(def.c,seen,cards,[]).length;
   return n<TALK_MIN_VOCAB?"Study at least "+TALK_MIN_VOCAB+" "+C[def.c].tongue+" cards first, so the partner has words you know. You’ve seen "+n+".":""}
 
@@ -83,7 +83,7 @@ const talkIsHowTo=t=>TALK_HOWTO.test(String(t||""));
 const talkChips=scene=>scene.vocab.filter(k=>!isRecog(k));
 
 function talkNew(def,seen,cards){
-  const c=def&&C[def.c]?def.c:"";
+  const c=def&&isCountry(def.c)?def.c:"";
   return {def,c,vocab:c?talkVocab(c,seen,cards,def.cats):[],log:[],turns:0,newWords:[],stage:"talk",end:"",feedback:null}}
 // the conversation as sent to the model; skip leaves out the latest entry (the reply being answered, sent on its own)
 const talkConv=(scene,skip)=>talkTag(JSON.stringify(scene.log.slice(0,skip?-1:undefined).filter(x=>x.who!=="coach").map(x=>x.who==="you"?{who:"traveler",said:x.text}:{who:"partner",said:x.line.text,en:x.line.en})));

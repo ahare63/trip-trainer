@@ -48,7 +48,7 @@ function shotSuspect(v){
   return s.split(/\s+/).some(w=>/[A-Za-z]/.test(w)&&(w.match(/\d/g)||[]).length>=2)}
 
 function shotPlace(x){
-  if(!x||typeof x!=="object"||Array.isArray(x)||!["tw","kr","jp"].includes(x.c))return null;
+  if(!x||typeof x!=="object"||Array.isArray(x)||!isCountry(x.c))return null;
   if(typeof x.en!=="string"||(x.nat!=null&&typeof x.nat!=="string"))return null;
   const t=v=>String(v||"").normalize("NFC").replace(/[<>]/g," ").replace(/\s+/g," ").trim();
   const en=t(x.en),nat=t(x.nat);

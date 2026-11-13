@@ -21,7 +21,7 @@ async function addOne(who,f,run){
 function quickAddNow(){const f=trip.quick;return addOne("quick",f,(ask,step)=>quickAdd({c:f.c,text:f.text},ask,CARDS,state.hold,step))}
 function quickFrom(q,c){
   if(q)trip.quick.text=q;
-  if(C[c])trip.quick.c=c;
+  if(isCountry(c))trip.quick.c=c;
   trip.focus="quick-text";location.hash="trip"}
 function addByHand(){const f=trip.hand;return addOne("hand",f,(ask,step)=>addPlaceByHand({c:f.c,en:f.en,nat:f.nat},ask,CARDS,state.hold,step))}
 /* reading a booking screenshot (js/booking.js); the file itself is only ever a local variable of bookingRead() */
