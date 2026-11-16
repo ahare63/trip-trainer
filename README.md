@@ -6,7 +6,7 @@ A self-paced web app for learning travel Mandarin, Korean and Japanese from zero
 - **One language at a time:** Mandarin in weeks 1 to 3, Korean in weeks 4 to 6, a Japanese crash course in week 7, mixed review in week 8.
 - **Spaced repetition:** cards you get right return after 1, 2, 4, 8 and 16 days; cards you miss return the next day.
 - **Hangul lab:** the Korean alphabet in three sets with memory hooks, a syllable-block builder, and a drill for sounding out real menu and sign words.
-- **Essentials:** hello, goodbye, yes, no, sorry, excuse me, please and thank you in each language, always one tap away.
+- **Essentials:** hello, goodbye, yes, no thanks, sorry, excuse me, please and thank you in each language, always one tap away.
 - **Phrasebook and customs:** everything searchable for use on the trip, plus etiquette notes per country.
 
 ## Use it

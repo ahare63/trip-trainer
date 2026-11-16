@@ -14,6 +14,7 @@ Object.assign(PARTS,{
 "jp-basics-do-you-speak-english":{parts:[["英語","English"],["は","topic marker"],["話せ","can speak"],["ます","polite ending"],["か","question marker"],["?",""]]},
 "jp-basics-how-much-is-it":{parts:[["いくら","how much"],["です","is (polite)"],["か","question marker"],["?",""]]},
 "jp-basics-where-is-the-restroom":{parts:[["トイレ","restroom, toilet"],["は","topic marker"],["どこ","where"],["です","is (polite)"],["か","question marker"],["?",""]]},
+"jp-basics-no-that-s-not-it":{parts:[["違い","differ"],["ます","polite ending"]],lit:"it differs"},
 "jp-basics-i-m-fine-no-thanks":{parts:[["大丈夫","fine, all right"],["です","is (polite)"]]},
 "jp-basics-cheers":{parts:[["乾","dry"],["杯","cup"]],lit:"dry the cup"},
 "jp-basics-can-i-use-a-card":{parts:[["カード","card"],["は","topic marker"],["使え","can use"],["ます","polite ending"],["か","question marker"],["?",""]]},
@@ -60,7 +61,7 @@ Object.assign(PARTS,{
 "jp-help-may-i-take-a-photo":{parts:[["写真","photo"],["を","object marker"],["撮って","take (a photo)"],["も","even if"],["いい","good, okay"],["です","is (polite)"],["か","question marker"],["?",""]],lit:"even if I take a photo, is it good?"}
 });
 PARTS_SKIPPED.push(
-"jp-basics-yes","jp-basics-no","jp-basics-delicious",
+"jp-basics-yes","jp-basics-delicious",
 "jp-dish-ramen","jp-dish-sushi","jp-dish-tempura","jp-dish-buckwheat-noodles","jp-dish-thick-wheat-noodles","jp-dish-pan-fried-dumplings",
 "jp-around-station","jp-around-ticket","jp-around-convenience-store",
 "jp-sign-push","jp-sign-pull"
