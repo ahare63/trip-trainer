@@ -36,8 +36,8 @@ const ESS=[
  ["Hello",{tw:["Hello"],kr:["Hello"],jp:["Hello"]}],
  ["Goodbye",{tw:["Goodbye"],kr:["Goodbye (you are leaving)","Goodbye (they are leaving)"],jp:["Goodbye"]}],
  ["Yes",{tw:["Yes, that’s right"],kr:["Yes"],jp:["Yes"]}],
- ["No",{tw:["No, it isn’t"],kr:["No"],jp:["No"]}],
- ["Sorry",{tw:["Sorry (a real apology)"],kr:["I’m sorry"],jp:["I’m sorry (a real apology)"]}],
+ ["No, thanks",{tw:["No need, thanks"],kr:["It’s okay / no thanks"],jp:["I’m fine, no thanks"]}],
+ ["Sorry",{tw:["Excuse me / sorry to bother you"],kr:["I’m sorry"],jp:["Excuse me / sorry"]}],
  ["Excuse me",{tw:["Excuse me / sorry to bother you"],kr:["Excuse me (to get someone’s attention)","Excuse me, coming through"],jp:["Excuse me / sorry"]}],
  ["Please",{tw:["Please"],kr:["This one, please"],jp:["Please (when asking for something)"]}],
  ["Thank you",{tw:["Thank you"],kr:["Thank you"],jp:["Thank you"]}]

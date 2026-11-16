@@ -6,7 +6,7 @@
 RAW.kr=[
 ["basics","Hello","안녕하세요","annyeonghaseyo","ahn-nyawng-ha-seh-yo"],
 ["basics","Thank you","감사합니다","gamsahamnida","kahm-sa-hahm-nee-da"],
-["basics","I’m sorry","죄송합니다","joesonghamnida","chweh-song-hahm-nee-da"],
+["basics","I’m sorry","죄송합니다","joesonghamnida","chweh-song-hahm-nee-da","What you say after bumping into someone or stepping on a foot."],
 ["basics","Excuse me (to get someone’s attention)","저기요","jeogiyo","chuh-gee-yo","How you call a server."],
 ["basics","Yes","네","ne","neh","Often sounds like “deh.”"],
 ["basics","No","아니요","aniyo","ah-nee-yo"],
