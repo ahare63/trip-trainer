@@ -153,6 +153,8 @@ else{
   });
   Object.keys(D.ICON).forEach(id=>{if(!ids.has(id))err("ICON key is not a card id: "+id);codes(D.ICON[id],"ICON "+id)});
   ["place","dish","phrase"].forEach(kind=>{if(!has(D.ICON_TRIP,kind))err("ICON_TRIP has no icon for trip "+kind+" cards");else codes(D.ICON_TRIP[kind],"ICON_TRIP "+kind)});
+  const iconDir=path.join(root,"images/icons"),listed=new Set(Object.values(D.ICON_FILE));
+  if(fs.existsSync(iconDir))fs.readdirSync(iconDir).filter(f=>f.endsWith(".svg")).forEach(f=>{if(!listed.has("images/icons/"+f))err("images/icons/"+f+" is not in ICON_FILE; delete it or list it")});
   Object.keys(D.ICON_FILE).forEach(c=>{
     const f=D.ICON_FILE[c],at="ICON_FILE "+c;
     if(f!=="images/icons/"+c+".svg")err(at+": file must be images/icons/"+c+".svg");
