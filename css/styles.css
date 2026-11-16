@@ -179,6 +179,18 @@ table.key th{font-weight:600;white-space:nowrap}
 .dish-photo{display:block;width:100%;max-width:320px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:var(--rule)}
 .entry .dish-photo{grid-column:1/-1;margin-top:6px}
 .note .dish-photo{margin-bottom:10px}
+/* card icons: an OpenMoji outline used as a mask, so it takes the country colour in either theme.
+   The mask image is set inline: a url() in a custom property would resolve against this stylesheet, not the page */
+.card-icon{display:block;position:relative;width:72px;height:72px;margin:12px 0 6px;flex:none}
+.note .card-icon{margin:0 0 10px}
+.card-icon .ic{position:absolute;inset:0;background:var(--c,var(--ink));-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.card-icon.no .ic:first-child{inset:15px}
+.card-icon .badge{position:absolute;right:-8px;bottom:-8px;width:40px;height:40px;border-radius:50%;background:var(--surface)}
+.card-icon .badge .ic{inset:3px}
+details.more{margin-top:14px;border-top:1px solid var(--rule);padding-top:10px}
+details.more summary{cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted);width:max-content}
+details.more[open] summary{margin-bottom:4px}
+.more-note{margin-top:10px;font-size:.95rem;max-width:56ch}
 .credits{list-style:none;padding:0;margin:14px 0 0}
 .credits li{padding:10px 0;border-top:1px solid var(--rule);font-size:.9rem;overflow-wrap:anywhere}
 .cols{display:grid;gap:16px;margin-top:18px}

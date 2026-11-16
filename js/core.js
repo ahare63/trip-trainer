@@ -3,7 +3,7 @@
 /* ---------- state ---------- */
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
-function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{}}}
+function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,more:false,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{}}}
 /* a country key of C; C[c] alone would also accept inherited keys such as "constructor" */
 const isCountry=c=>typeof c==="string"&&Object.prototype.hasOwnProperty.call(C,c);
 /* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
@@ -44,7 +44,7 @@ function syncTrip(){
   state.trip.forEach((x,i)=>CARDS.push({id:x.id,c:x.c,wk:0,cat:"trip",kind:x.kind,en:x.en,nat:x.nat,rom:x.rom,say:x.say,note:x.note,ord:i}))}
 function normalize(s){const b=blank();if(!s||typeof s!=="object")return b;
   const trip=cleanList(s.trip);
-  return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,updated:+s.updated||0,
+  return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,more:s.more===true,updated:+s.updated||0,
     trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip)}}
 let state=blank();
 try{const s=localStorage.getItem(KEY);if(s)state=normalize(JSON.parse(s))}catch(e){}
@@ -84,6 +84,16 @@ const bul=c=>`<span class="bul" data-c="${c}">${C[c].code}</span>`;
 const hearBtn=(text,c,label)=>`<button class="hear" data-c="${c}" data-say="${h(text)}">${label||"Hear it"}</button>`;
 const signClass=k=>k.cat==="sign"?` sign sign-${h(SIGN_STYLE[k.id])}`:"";
 
+/* the card's icon, drawn in the country colour; none when the card has a dish photo. Decorative: the English is always beside it */
+function cardIcon(k){
+  if(PHOTOS[k.id])return "";
+  const v=k.cat==="trip"?ICON_TRIP[k.kind]:ICON[k.id];
+  if(!v)return "";
+  const [base,badge]=v.split("+"),ic=c=>`<span class="ic" style="-webkit-mask-image:url('${ICON_FILE[c]}');mask-image:url('${ICON_FILE[c]}')"></span>`;
+  /* a no sign (1F6AB) is drawn full size over a smaller base, like a no-smoking sign; any other second code is a corner badge */
+  if(badge==="1F6AB")return `<span class="card-icon no" aria-hidden="true">${ic(base)}${ic(badge)}</span>`;
+  return `<span class="card-icon" aria-hidden="true">${ic(base)}${badge?`<span class="badge">${ic(badge)}</span>`:""}</span>`;
+}
 const dishPhoto=(k,lazy)=>PHOTOS[k.id]?`<img class="dish-photo" src="${h(PHOTOS[k.id].file)}" alt="${h(k.en)}"${lazy?' loading="lazy"':""}>`:"";
 
 /* ---------- audio ---------- */

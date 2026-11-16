@@ -31,7 +31,6 @@ Object.assign(PARTS,{
 "tw-order-eating-here":{parts:[["內","inside"],["用","use"]],lit:"use inside"},
 "tw-order-the-bill-please":{parts:[["買","buy (here, pay)"],["單","bill"]]},
 "tw-order-not-spicy-please":{parts:[["不","not"],["要","want"],["辣","spicy"]]},
-"tw-order-no-cilantro":{parts:[["不","not"],["要","want"],["香菜","cilantro"]],lit:"don’t want fragrant greens"},
 "tw-order-i-m-vegetarian":{parts:[["我","I"],["吃","eat"],["素","vegetarian food"]],lit:"I eat plain"},
 "tw-order-half-sugar":{parts:[["半","half"],["糖","sugar"]]},
 "tw-order-less-ice":{parts:[["少","less"],["冰","ice"]]},
