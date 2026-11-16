@@ -30,7 +30,6 @@ RAW.tw=[
 ["order","Eating here","內用","nèiyòng","nay-yong"],
 ["order","The bill, please","買單","mǎidān","my-dahn"],
 ["order","Not spicy, please","不要辣","bú yào là","boo yow lah"],
-["order","No cilantro","不要香菜","bú yào xiāngcài","boo yow shyahng-tsai"],
 ["order","I’m vegetarian","我吃素","wǒ chī sù","waw chr soo","Look for 素 on signs. Taiwan is very vegetarian-friendly."],
 ["order","Half sugar","半糖","bàn táng","bahn tahng","Bubble tea shops ask for sugar level, then ice."],
 ["order","Less ice","少冰","shǎo bīng","shao bing"],
