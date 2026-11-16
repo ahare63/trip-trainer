@@ -11,7 +11,9 @@ A self-paced web app for learning travel Mandarin, Korean and Japanese from zero
 
 ## Use it
 
-Open `index.html` in a browser. There is nothing to install and no build step.
+**Live app: https://ahare63.github.io/trip-trainer/**
+
+To run it locally, open `index.html` in a browser. There is nothing to install and no build step.
 
 Dish photos come from Wikimedia Commons and carry their own licenses, listed with author and source on the Photo credits page (linked from the footer).
 
