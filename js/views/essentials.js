@@ -1,7 +1,7 @@
 "use strict";
 /* ---------- essentials ---------- */
 let essC=null;
-function essList(cs){const out=[];ESS.forEach(r=>cs.forEach(c=>r[1][c].forEach(en=>{const k=CARDS.find(x=>x.c===c&&x.en===en);if(k)out.push(k)})));return out}
+function essList(cs){const out=[];ESS.forEach(r=>cs.forEach(c=>r[1][c].forEach(en=>{const k=CARDS.find(x=>x.c===c&&x.en===en);if(k&&!out.includes(k))out.push(k)})));return out}
 function renderEssentials(){
   if(essC==null){const w=curWeek();essC=w<=3?"tw":w<=6?"kr":w===7?"jp":"all"}
   const cs=essC==="all"?["tw","kr","jp"]:[essC];
