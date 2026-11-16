@@ -1,6 +1,9 @@
 "use strict";
 /* ---------- the timeline panel on "Your trip": flights, trains, hotels and bookings in order, with links to the tickets ---------- */
-const tlv={filter:false,earlier:false,form:null,f:null,err:"",ok:"",bad:"",confirm:"",pick:"",busy:false};
+const tlv={filter:false,earlier:false,form:null,f:null,err:"",ok:"",bad:"",confirm:"",pick:"",busy:false,step:"",shot:null};
+/* tlv.shot, while entries read from a screenshot are being reviewed: {q: form fields, i, file, attach}. The file is kept
+   only until the last entry is saved, skipped or cancelled, so that it can be attached if the learner ticks the box. */
+const TL_SHOT_NO_IMAGES="This copy of the page can’t send images to Claude, so the screenshot wasn’t read. Add the entry by hand instead.";
 const TL_KIND_NAME={flight:"Flight",train:"Train",bus:"Bus",hotel:"Hotel",activity:"Activity",other:"Other"};
 const TL_FIELDS=["date","time","endDate","kind","title","where","status","link","note"];
 const tlBlankForm=()=>({date:"",time:"",endDate:"",kind:"flight",title:"",where:"",status:"booked",link:"",note:""});
@@ -29,7 +32,12 @@ function tlForm(){
   const f=tlv.f,off=tlv.busy?" disabled":"";
   const inp=(k,label,attrs)=>`<label class="fld">${label}<input class="ta" data-tlf="${k}" id="tlf-${k}" value="${h(f[k])}" ${attrs||""}${off}></label>`;
   const sel=(k,label,opts)=>`<label class="fld">${label}<select class="ta" data-tlf="${k}" id="tlf-${k}"${off}>${opts.map(o=>`<option value="${o[0]}"${f[k]===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select></label>`;
-  return `<div class="tl-form"><h4>${tlv.form==="new"?"Add an entry":"Edit entry"}</h4>
+  const sh=tlv.shot;
+  const head=sh?`<h4>From your screenshot${sh.q.length>1?`: ${sh.i+1} of ${sh.q.length}`:""}</h4>
+    <p class="meta" style="margin:4px 0 0;max-width:62ch">Check the date and times against your booking, then add it. Nothing is saved until you do.${sh.dropped?` ${sh.dropped===1?"One other item was":sh.dropped+" other items were"} left out because ${sh.dropped===1?"it":"they"} looked like private details, had no real date, or went past the limit of 6.`:""}</p>`
+    :`<h4>${tlv.form==="new"?"Add an entry":"Edit entry"}</h4>`;
+  const attach=sh&&tl.assets?`<p class="meta" style="margin-top:10px;max-width:62ch"><label><input type="checkbox" id="tl-shot-attach"${sh.attach?" checked":""}${off}> Attach this screenshot to the entry. Anyone this page is shared with can see it.</label></p>`:"";
+  return `<div class="tl-form">${head}
     <div class="fgrid">
       <div class="tl-two">${inp("date","Date",'type="date"')}${inp("time","Time, local (optional)",'type="time"')}</div>
       <div class="tl-two">${sel("kind","Kind",Object.keys(TL_KIND_NAME).map(k=>[k,TL_KIND_NAME[k]]))}${sel("status","Status",[["booked","Booked"],["to-book","To book"]])}</div>
@@ -37,9 +45,10 @@ function tlForm(){
       ${inp("where","City or station (optional)",'maxlength="80" autocomplete="off"')}
       ${inp("endDate","End date (optional, for a hotel stay)",'type="date"')}
       ${inp("link","Ticket or booking link (optional)",'type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://"')}
-      <label class="fld">Note (optional)<textarea class="ta" data-tlf="note" id="tlf-note" maxlength="300" style="min-height:70px"${off}>${h(f.note)}</textarea></label></div>
+      <label class="fld">${sh?"Note (optional). Anyone this page is shared with can see it.":"Note (optional)"}<textarea class="ta" data-tlf="note" id="tlf-note" maxlength="300" style="min-height:70px"${off}>${h(f.note)}</textarea></label></div>
+    ${attach}
     ${tlv.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(tlv.err)}</p>`:""}
-    <div class="row" style="margin-top:12px"><button class="btn" data-tl="save"${off}>${tlv.form==="new"?"Add to timeline":"Save changes"}</button><button class="btn ghost" data-tl="cancel"${off}>Cancel</button></div></div>`}
+    <div class="row" style="margin-top:12px"><button class="btn" data-tl="save"${off}>${tlv.form==="new"?"Add to timeline":"Save changes"}</button>${sh&&sh.i<sh.q.length-1?`<button class="btn ghost" data-tl="skip"${off}>Skip</button>`:""}<button class="btn ghost" data-tl="cancel"${off}>Cancel</button></div></div>`}
 
 function timelineHTML(){
   const all=state.timeline,today=todayISO();
@@ -56,8 +65,10 @@ function timelineHTML(){
       :`<p class="meta" style="margin-top:12px">${tlv.filter?"Nothing left to book.":"Nothing coming up."}</p>`}
   return `<div class="panel" id="timeline"><h3>Timeline</h3>
     <p class="meta" style="margin-top:6px;max-width:62ch">Flights, trains, hotels and bookings in order, each linking to its ticket or confirmation. Times are local to where each one happens.</p>${files}
+    <input type="file" id="tl-shot" accept="image/png,image/jpeg" hidden>
     <div class="row" style="margin-top:12px"><button class="btn small" data-tl="new"${tlv.busy?" disabled":""}>Add an entry</button>
-      <button class="chip" data-tl="filter" aria-pressed="${tlv.filter}">To book${toBook?` (${toBook})`:""}</button></div>
+      <button class="btn ghost small" data-tl="shot"${tlv.busy||tlv.form?" disabled":""}>${tlv.step?"Reading…":"Fill from a screenshot"}</button>
+      <button class="chip" data-tl="filter" aria-pressed="${tlv.filter}">To book${toBook?` (${toBook})`:""}</button><span class="meta" aria-live="polite">${h(tlv.step)}</span></div>
     ${tlv.bad?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(tlv.bad)}</p>`:""}
     ${tlv.ok?`<p class="good" role="status" style="margin-top:10px">${h(tlv.ok)}</p>`:""}
     ${tlv.form?tlForm():""}${list}</div>`}
@@ -65,9 +76,12 @@ function timelineHTML(){
 async function tlAct(a,id){
   if(tlv.busy)return;
   tlv.ok="";tlv.bad="";
-  if(a==="new"){tlv.form="new";tlv.f=tlBlankForm();tlv.err="";trip.focus="tlf-date";renderTrip();return}
-  if(a==="edit"){const e=state.timeline.find(x=>x.id===id);if(!e)return;tlv.form=id;tlv.f=tlBlankForm();TL_FIELDS.forEach(k=>tlv.f[k]=e[k]);tlv.err="";trip.focus="tlf-title";renderTrip();return}
-  if(a==="cancel"){tlv.form=null;tlv.err="";renderTrip();return}
+  if(a==="shot"){if(tlv.form)return;const i=$("#tl-shot");if(i)i.click();return}
+  if(a==="skip"&&tlv.shot){tlShotNext("");renderTrip();return}
+  if(a==="save"&&tlv.shot){tlShotSave();return}
+  if(a==="new"){tlv.shot=null;tlv.form="new";tlv.f=tlBlankForm();tlv.err="";trip.focus="tlf-date";renderTrip();return}
+  if(a==="edit"){tlv.shot=null;const e=state.timeline.find(x=>x.id===id);if(!e)return;tlv.form=id;tlv.f=tlBlankForm();TL_FIELDS.forEach(k=>tlv.f[k]=e[k]);tlv.err="";trip.focus="tlf-title";renderTrip();return}
+  if(a==="cancel"){tlv.shot=null;tlv.form=null;tlv.err="";renderTrip();return}
   if(a==="save"){const r=tlSave(tlv.f,tlv.form==="new"?undefined:tlv.form);
     if(r.error)tlv.err=r.error;else{tlv.form=null;tlv.err="";tlv.ok="Saved."}
     renderTrip();return}
@@ -88,4 +102,35 @@ async function tlFilePicked(file){
   const r=await tlAttach(id,file);
   tlv.busy=false;
   if(r.error)tlv.bad=r.error;else tlv.ok=r.warn||"File attached.";
+  renderTrip()}
+
+/* ---------- filling entries from a booking screenshot (js/tlshot.js) ---------- */
+async function tlShotPicked(file){
+  if(!file||tlv.busy||tlv.form)return;
+  tlv.shot=null;tlv.ok="";tlv.bad="";tlv.confirm="";
+  tlv.busy=true;tlv.step="Reading the screenshot. This can take a minute.";renderTrip();
+  await aiReady;
+  const stop=aiStop();
+  const r=await readTimelineShot(file,stop?async()=>{throw {code:stop}}:askJSON,todayISO());
+  tlv.busy=false;tlv.step="";
+  if(r.why)tlv.bad=r.why;
+  else if(r.error)tlv.bad=r.error==="no_images"?TL_SHOT_NO_IMAGES:aiMessage(r.error);
+  else if(!r.entries.length)tlv.bad=r.dropped?"Nothing could be used. What Claude read looked like private details or had no real date, so it was left out. Add the entry by hand instead."
+    :"Nothing found. Claude saw no flight, train, hotel or other booking in this screenshot.";
+  else{tlv.shot={q:r.entries,i:0,file,attach:false,dropped:r.dropped};tlShotOpen()}
+  renderTrip()}
+function tlShotOpen(){tlv.form="new";tlv.f=Object.assign(tlBlankForm(),tlv.shot.q[tlv.shot.i]);tlv.shot.attach=false;tlv.err="";trip.focus="tlf-date"}
+/* moves to the next entry read from the screenshot, or ends the review (dropping the file) after the last one */
+function tlShotNext(done){
+  tlv.shot.i++;
+  if(tlv.shot.i<tlv.shot.q.length){tlShotOpen();return}
+  tlv.shot=null;tlv.form=null;tlv.err="";if(done)tlv.ok=done}
+async function tlShotSave(){
+  if(tlv.busy||!tlv.shot)return;
+  tlv.busy=true;renderTrip();
+  const r=await tlAddFromShot(tlv.f,tlv.shot.file,tlv.shot.attach);
+  tlv.busy=false;
+  if(r.error){tlv.err=r.error;renderTrip();return}
+  if(r.warn)tlv.bad=r.warn;
+  tlShotNext("Saved.");
   renderTrip()}

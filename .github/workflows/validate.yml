@@ -15,4 +15,5 @@ jobs:
       - run: node tools/test-notes.js
       - run: node tools/test-partner.js
       - run: node tools/test-shot.js
+      - run: node tools/test-tlshot.js
       - run: node tools/bundle.js

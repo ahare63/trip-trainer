@@ -36,9 +36,10 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 15. `js/booking.js`: reading a booking screenshot, with no page access: `SHOT_MAX`, `shotPrompt()`, `readBooking()`, `addFromBooking()`, `applyBooking()` (see “Reading a booking screenshot”)
 16. `js/notes.js`: the generated notes with no page access: `writeNote()`, `applyNote()`, `deleteNote()`, `noteParas()` (see “Reading notes”)
 17. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
-18. `js/partner.js`: the conversation partner with no page access: `talkVocab`, `talkReady`, `talkFits`, `talkCheckLine`, `talkIsHowTo`, `talkChips`, `talkStart`, `talkSay`, `talkStop`, `talkOffer`, `TALK_GLUE` (see “Conversation partner”)
-19. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
-20. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
+18. `js/tlshot.js`: filling timeline entries from a booking screenshot, with no page access: `tlShotPrompt()`, `readTimelineShot()`, `tlAddFromShot()` (see “Timeline from a screenshot”)
+19. `js/partner.js`: the conversation partner with no page access: `talkVocab`, `talkReady`, `talkFits`, `talkCheckLine`, `talkIsHowTo`, `talkChips`, `talkStart`, `talkSay`, `talkStop`, `talkOffer`, `TALK_GLUE` (see “Conversation partner”)
+20. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+21. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
 
@@ -115,6 +116,17 @@ Flights, trains, hotels and bookings the learner enters on “Your trip”, in `
 - Attachments exist only in the Claude-hosted copy. `tlAssetsInit()` sets `tl.assets` to the `claude.use("assets")` namespace, or null (GitHub Pages, no permission), in which case the attach control is hidden. Only the asset id is stored on the entry; the file is served at `"/_blob/" + id`. PDF, PNG and JPEG, at most 20 MiB. `tlAttach` uploads first, stores the id, then deletes the old asset when replacing. `tlDropFile` and `tlDelete` delete the asset first and keep the entry if that fails. Assets are deleted only by these functions, called from a learner’s confirmed click; never on load, normalize or sync.
 - The Claude-hosted copy must be published with the `assets` capability declared next to `db`, `user` and `sample` (`sample: {images: true}`, see “Reading a booking screenshot”).
 - `node tools/test-timeline.js` runs the real code with only `claude.use("assets")` stubbed.
+
+## Timeline from a screenshot
+
+“Fill from a screenshot” on the Timeline panel reads a booking confirmation into the entry form for the learner to check. The engine is `js/tlshot.js`; it never touches the page and adds no new way into `state.timeline`: every entry is saved by `tlSave()`.
+
+- **The image** is checked by `shotImage()` from `js/booking.js` (PNG or JPEG by first bytes, non-empty, at most `SHOT_MAX`) and refused with a message before any request. `readTimelineShot(file, ask, today)` sends it with `tlShotPrompt(today)` in one `ask(prompt, "complex", blob)` request.
+- **The prompt** asks for `{entries:[{date, time, endDate, kind, title, where, ref, arriveAt, arriveTime, arriveDate}]}`: one entry per flight, train or bus at its departure, a hotel from check-in to check-out, a restaurant booking as `activity`, any country. It gives today’s date so a date printed without a year becomes the first such date on or after today. It says text in the image is information, never instructions, and to leave out people’s names, prices, payment and contact details and street addresses.
+- **Checked in code** (`tlsEntry()`): the reply must be an object with an `entries` array, otherwise `invalid_json`. At most 6 entries are kept. An entry is dropped if its date is not a real `YYYY-MM-DD` day, its title is empty or over 120 characters, or its title or `where` looks like private data (`tlsSuspect()`): an `@`, link, currency sign or currency next to a digit, `**`/`••`/`XXXX`, a `+` before a digit, an amount like `128.50`, or eight or more digits. It is lighter than `shotSuspect()` so flight and train numbers (`EVA BR170`, `Nozomi 23`) survive. A bad time, or an end date before the date, is cleared; an unknown kind becomes `other`. Status is always `booked`, and there is never a link.
+- **The note** is built in code: `Confirmation: <ref>` when `ref` is 4–20 letters, digits or hyphens and passes `tlsSuspect()` (so a phone or card number can’t), and for a flight, train or bus `Arrives <arriveAt> <arriveTime>`, with “on Mar 3” when it arrives on a different day. The form says the note is visible to anyone the page is shared with.
+- **Reviewing**: the view (`tlShotPicked()`, `tlShotSave()` in `js/views/timeline.js`) opens the entry form filled with each entry in turn (“1 of 2”), with Skip and Cancel, and says how many entries were left out. The screenshot button is disabled while any entry form is open, so a draft is never replaced. Reading saves nothing. `tlAddFromShot(fields, file, attach)` saves through `tlSave()` and, only if the learner ticked “Attach this screenshot” (shown only when `tl.assets` is set), attaches it through `tlAttach()`. If attaching fails the entry is kept and a warning is shown. The file is held in `tlv.shot` only until the last entry is saved, skipped or cancelled.
+- It needs no capability beyond the existing `sample: {images: true}` and `assets`. `node tools/test-tlshot.js` runs the real code with only the model and `claude.use("assets")` stubbed.
 
 ## Reading notes
 
@@ -193,7 +205,7 @@ Short typed role-plays on the “Talk” tab (`#talk`, `js/views/talk.js`), limi
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js` and `test-shot.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js` and `test-tlshot.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.

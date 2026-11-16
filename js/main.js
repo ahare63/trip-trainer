@@ -60,6 +60,8 @@ document.addEventListener("change",e=>{
   if(e.target.id==="hand-c"){trip.hand.c=e.target.value;const n=$("#hand-nat");if(n){n.lang=C[trip.hand.c].hl;n.placeholder=HAND_NAT[trip.hand.c]}}
   if(e.target.id==="quick-c")trip.quick.c=e.target.value;
   if(e.target.id==="tl-file"){const f=e.target.files[0];e.target.value="";tlFilePicked(f)}
+  if(e.target.id==="tl-shot"){const f=e.target.files[0];e.target.value="";tlShotPicked(f)}
+  if(e.target.id==="tl-shot-attach"&&tlv.shot)tlv.shot.attach=e.target.checked;
   if(e.target.id==="bk-file"){const f=e.target.files[0];e.target.value="";bookingRead(f)}
   if(e.target.dataset.bkpick!=null&&bk.places){const p=bk.places[+e.target.dataset.bkpick];if(p)p.on=e.target.checked}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
