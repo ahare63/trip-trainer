@@ -50,9 +50,9 @@ function tlsEntry(x){
   const time=tlTime(x.time)?x.time:"",endDate=tlDate(x.endDate)&&x.endDate>=x.date?x.endDate:"";
   const note=[];
   const ref=tlsText(x.ref,40);
-  if(/^[A-Za-z0-9-]{4,20}$/.test(ref)&&(ref.match(/\d/g)||[]).length<13)note.push("Confirmation: "+ref);
+  if(/^[A-Za-z0-9-]{4,20}$/.test(ref)&&!tlsSuspect(ref))note.push("Confirmation: "+ref);
   const at=tlsText(x.arriveAt,40);
-  if(tlTime(x.arriveTime)&&!(at&&tlsSuspect(at))){
+  if(["flight","train","bus"].includes(x.kind)&&tlTime(x.arriveTime)&&!(at&&tlsSuspect(at))){
     const day=tlDate(x.arriveDate)&&x.arriveDate!==x.date?" on "+tlsDay(x.arriveDate):"";
     note.push("Arrives "+(at?at+" ":"")+x.arriveTime+day)}
   return {date:x.date,time,endDate,kind:TL_KINDS.includes(x.kind)?x.kind:"other",title,where,status:"booked",link:"",note:note.join(". ")}}

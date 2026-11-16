@@ -114,6 +114,11 @@ const FLIGHT={date:"2026-03-01",time:"23:40",kind:"flight",title:"SFO → TPE, E
     const stray=await D.readTimelineShot(png(),fake({entries:[E({title:"Stray arrival",arriveTime:"9am",arriveAt:"guest@example.com"}),E({title:"Leaky arrival",arriveTime:"09:00",arriveAt:"guest@example.com"})]}),TODAY);
     eq(stray.entries[0].note,"","a bad arrival time leaves no arrival line");
     eq(stray.entries[1].note,"","an arrival place that looks like an email leaves no arrival line");
+    const refs=await D.readTimelineShot(png(),fake({entries:[E({title:"Phone ref",ref:"886-2-2345-6789"}),E({title:"Local phone ref",ref:"0227710342"}),E({title:"Hotel with arrival",kind:"hotel",arriveAt:"Taipei",arriveTime:"10:00"}),E({title:"Short ref",ref:"5521"})]}),TODAY);
+    eq(refs.entries[0].note,"","a phone-shaped confirmation number is left out");
+    eq(refs.entries[1].note,"","a long all-digit confirmation number is left out");
+    eq(refs.entries[2].note,"","a hotel gets no arrival line");
+    eq(refs.entries[3].note,"Confirmation: 5521","a short numeric confirmation number is kept");
   }
   {
     const many=Array.from({length:10},(_,i)=>({date:"2026-03-0"+(i%9+1),kind:"other",title:"Entry "+i}));
