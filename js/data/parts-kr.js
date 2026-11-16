@@ -3,7 +3,7 @@
 Object.assign(PARTS,{
 "kr-basics-hello":{parts:[["안녕","peace, well-being"],["하","be"],["세요","polite ending"]],lit:"are you at peace?"},
 "kr-basics-thank-you":{parts:[["감사","gratitude"],["합니다","do (formal polite)"]],lit:"I do gratitude"},
-"kr-basics-i-m-sorry":{parts:[["죄송","sorry, ashamed"],["합니다","do (formal polite)"]]},
+"kr-basics-i-m-sorry":{parts:[["죄송","sorry, ashamed"],["해요","do (polite)"]]},
 "kr-basics-excuse-me-to-get-someone-s-attention":{parts:[["저기","over there"],["요","polite ending"]],lit:"(you) over there"},
 "kr-basics-no":{parts:[["아니","no"],["요","polite ending"]]},
 "kr-basics-this-one-please":{parts:[["이","this"],["거","thing"],[" ",""],["주세요","please give"]]},
