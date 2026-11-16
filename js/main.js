@@ -66,6 +66,8 @@ document.addEventListener("change",e=>{
   if(e.target.dataset.bkpick!=null&&bk.places){const p=bk.places[+e.target.dataset.bkpick];if(p)p.on=e.target.checked}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
+/* toggle doesn't bubble, so listen in the capture phase; a card rendered already open fires it too, so save only real changes */
+document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("more")&&state.more!==e.target.open){state.more=e.target.open;commit()}},true);
 document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value;if(e.target.id==="talk-text")tk.text=e.target.value});
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.isComposing&&e.target.id==="quick-text"){e.preventDefault();quickAddNow();return}

@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,SCENES:typeof SCENES==='undefined'?undefined:SCENES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,SCENES:typeof SCENES==='undefined'?undefined:SCENES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED,ICON:typeof ICON==='undefined'?undefined:ICON,ICON_FILE:typeof ICON_FILE==='undefined'?undefined:ICON_FILE,ICON_TRIP:typeof ICON_TRIP==='undefined'?undefined:ICON_TRIP})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -140,6 +140,30 @@ Object.keys(D.PHOTOS).forEach(id=>{
 D.PHOTOS_MISSING.forEach(id=>{if(!dishIds.has(id))err("PHOTOS_MISSING: not a dish card id: "+id)});
 if(new Set(D.PHOTOS_MISSING).size!==D.PHOTOS_MISSING.length)err("PHOTOS_MISSING has duplicates");
 dishIds.forEach(id=>{if(!D.PHOTOS[id]&&!D.PHOTOS_MISSING.includes(id))err("Dish card "+id+" is in neither PHOTOS nor PHOTOS_MISSING")});
+
+// card icons (OpenMoji outlines)
+if(!D.ICON||!D.ICON_FILE||!D.ICON_TRIP)err("js/data/icons.js must be loaded in index.html and define ICON, ICON_FILE and ICON_TRIP");
+else{
+  const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k),used=new Set(),MAX_ICON_KB=8;
+  const codes=(v,at)=>{if(typeof v!=="string"||!/^[0-9A-F]+(-[0-9A-F]+)*(\+[0-9A-F]+(-[0-9A-F]+)*)?$/.test(v)){err(at+": must be one OpenMoji code, or a base code plus an overlay code joined by +, not "+v);return}
+    v.split("+").forEach(c=>{used.add(c);if(!has(D.ICON_FILE,c))err(at+": code "+c+" has no ICON_FILE entry")})};
+  D.CARDS.forEach(k=>{
+    if(D.PHOTOS[k.id]){if(has(D.ICON,k.id))err("Card has a photo, so it needs no icon: "+k.id);return}
+    if(!has(D.ICON,k.id))err("Card has no icon: "+k.id);
+  });
+  Object.keys(D.ICON).forEach(id=>{if(!ids.has(id))err("ICON key is not a card id: "+id);codes(D.ICON[id],"ICON "+id)});
+  ["place","dish","phrase"].forEach(kind=>{if(!has(D.ICON_TRIP,kind))err("ICON_TRIP has no icon for trip "+kind+" cards");else codes(D.ICON_TRIP[kind],"ICON_TRIP "+kind)});
+  Object.keys(D.ICON_FILE).forEach(c=>{
+    const f=D.ICON_FILE[c],at="ICON_FILE "+c;
+    if(f!=="images/icons/"+c+".svg")err(at+": file must be images/icons/"+c+".svg");
+    if(!used.has(c))err(at+": no card uses this icon");
+    const p=path.join(root,f||"");
+    if(!f||!fs.existsSync(p)){err(at+": icon file is missing");return}
+    const buf=fs.readFileSync(p);
+    if(buf.length>MAX_ICON_KB*1024)err(at+": icon is "+(buf.length/1024).toFixed(1)+" kB, limit "+MAX_ICON_KB);
+    if(!/^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/.test(buf.toString("utf8")))err(at+": not an SVG file");
+  });
+}
 
 // word and character breakdowns
 if(!D.PARTS||!Array.isArray(D.PARTS_SKIPPED))err("js/data/parts-tw.js must be loaded in index.html and define PARTS and PARTS_SKIPPED");

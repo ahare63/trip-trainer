@@ -23,13 +23,14 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 2. `js/data/tw.js`, `kr.js`, `jp.js`: fill `RAW.tw`, `RAW.kr`, `RAW.jp`
 3. `js/data/hangul.js`: `INIT`, `MED`, `FIN`, `FIN_ALL` (all 28 final slots, index 0 empty), `compose()`, `splitHangul(block)` (the letters of one syllable, or `[block]`), `LETTERS`, `WORDS`
 4. `js/data/photos.js`: `PHOTOS` (card id to image file and credit), `PHOTOS_MISSING`, `licenseURL()`
+   - `js/data/icons.js`: `ICON` (card id to OpenMoji code), `ICON_FILE` (code to SVG path), `ICON_TRIP` (trip card kind to code); see “Images”
 5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
 6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
 7. `js/data/notes.js`: `NOTES`, the built-in reading notes (see “Reading notes”)
 8. `js/data/scenes.js`: `SCENES`, the role-play scenarios (see “Conversation partner”)
 9. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
 10. `js/cards.js`: builds `CARDS`
-11. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `dishPhoto`, `speak`
+11. `js/core.js`: `state`, saving, `cleanCard`, `cleanList`, `syncTrip` (trip cards, see below), `$`, `h`, `curWeek`, `shuffle`, `toast`, `bul`, `hearBtn`, `signClass`, `cardIcon`, `dishPhoto`, `speak`
 12. `js/tones.js`: `toneMarks(rom)` (written tones), `spokenTones(rom)` (tones as spoken), `toneSVG(tones)`, `toneLine(card)` (tone contours for Taiwan cards; `tools/validate.js` also loads it)
 13. `js/ai.js`: `askJSON(prompt, tier, image)`, the only way the app asks a model for anything (see “Asking Claude”); `aiReady`, `AI`, `MODELS`, `getKey`, `setKey`, `aiMessage(code)`
 14. `js/tripcheck.js`: the trip-deck checks, with no page access: `PROBES`, `runTripChecks()`, `checkCards()`, `addPlaceByHand()`, `quickAdd()`, `applyTripReport()`, `applyTripCard()`, `removeTripCard()`, `resolveHold()`
@@ -38,7 +39,7 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 17. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
 18. `js/tlshot.js`: filling timeline entries from a booking screenshot, with no page access: `tlShotPrompt()`, `readTimelineShot()`, `tlAddFromShot()` (see “Timeline from a screenshot”)
 19. `js/partner.js`: the conversation partner with no page access: `talkVocab`, `talkReady`, `talkFits`, `talkCheckLine`, `talkIsHowTo`, `talkChips`, `talkStart`, `talkSay`, `talkStop`, `talkOffer`, `TALK_GLUE` (see “Conversation partner”)
-20. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the photo credits page, linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+20. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the credits page (card icons and dish photos), linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
 21. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
@@ -46,6 +47,12 @@ A new script must be added to `index.html` in the right position. `tools/bundle.
 ## Images
 
 `images/dishes/<card-id>.jpg` holds the dish photos: JPEG, at most 640 px wide and 60 kB, from Wikimedia Commons under public domain, CC0, CC BY or CC BY-SA. Every dish card id is in `PHOTOS` or `PHOTOS_MISSING`, and `tools/validate.js` enforces this. `tools/bundle.js` inlines the files as data URIs. Images are local files only; never hotlink.
+
+`images/icons/<code>.svg` holds the card icons: OpenMoji 15.1.0 “black” outlines (openmoji.org, CC BY-SA 4.0, credited on the Credits page), named by OpenMoji hexcode. Every card without a dish photo has an `ICON` entry: one code, or two joined by `+`. A second code of `1F6AB` (🚫) is drawn full size over a smaller first icon (“no ice”); any other second code is a corner badge (a price tag on Korean price numbers). Trip cards use `ICON_TRIP[kind]`. `tools/validate.js` checks coverage, that every code has a file, that every file is used, and the 8 kB limit. `ICON_FILE` lists each path once so `tools/bundle.js` inlines each file once.
+
+- `cardIcon(k)` (in `js/core.js`) returns the icon HTML, or `""` for a card with a dish photo. Icons are decorative (`aria-hidden`): the English is always next to them.
+- Each icon is a CSS mask filled with `var(--c)`, so it takes the country colour in both themes. The mask URL goes in the element’s inline style, not a custom property: a `url()` in a custom property resolves against `css/styles.css`, which breaks the paths on GitHub Pages while the bundled copy (data URIs) still works.
+- Production cards show the icon on the front, above the English. Recognition cards (signs, menu words, dishes) show it only on the answer side, since the meaning is the question there.
 
 ## Cards
 
@@ -171,15 +178,24 @@ Short typed role-plays on the “Talk” tab (`#talk`, `js/views/talk.js`), limi
 
 `AI.mode` is `"claude"`, `"key"` or `"none"` once `aiReady` resolves. A failed or declined request must add nothing and say so. Model output is untrusted: validate it and escape it with `h()`.
 
+## Study cards
+
+The answer side of a study card (`renderStudy()` in `js/views/study.js`) shows what the learner needs at a glance and puts the rest in a `<details class="more">` “More info” section:
+
+- Always visible: the icon (or dish photo), the native text, the sounds-like spelling, the audio button and, on Taiwan cards, the tone line. Recognition cards also show the English. Dish cards, course or trip, keep their note visible, since it describes the food.
+- In “More info”: the breakdown (with its literal translation and the Korean “Show letters” toggle), the standard romanization and, except on dish cards, the note.
+- `node tools/test-cards.js` renders real cards and checks what sits where.
+
 ## Saved progress
 
 `state` in `js/core.js`, stored under the `localStorage` key `trip-phrasebook-v1`:
 
 ```js
-{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, updated, trip, hold, itin, timeline, notes }
+{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, more, updated, trip, hold, itin, timeline, notes }
 ```
 
 - `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.” `notes`: `{ [tripCardId]: { body, at } }`, see “Reading notes.”
+- `auto`: play the audio when an answer appears. `more`: whether “More info” on study cards was left open (only `true` counts; old data loads closed). The `toggle` listener in `js/main.js` saves it, in the capture phase since `toggle` doesn’t bubble, and only when it changed, because a card rendered already open fires `toggle` too.
 - `start`, `due`, `day`, `lastDay` are local day numbers from `today()`.
 - `b` is the review box, 1 to 5; gaps are `GAP = [0,1,2,4,8,16]` days.
 - Call `commit()` after changing `state` in response to a user action. It stamps `updated`, saves locally, and syncs when running in Claude.
@@ -205,7 +221,7 @@ Short typed role-plays on the “Talk” tab (`#talk`, `js/views/talk.js`), limi
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js` and `test-tlshot.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js`, `test-tlshot.js` and `test-cards.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.

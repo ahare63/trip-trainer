@@ -15,7 +15,7 @@ A self-paced web app for learning travel Mandarin, Korean and Japanese from zero
 
 To run it locally, open `index.html` in a browser. There is nothing to install and no build step.
 
-Dish photos come from Wikimedia Commons and carry their own licenses, listed with author and source on the Photo credits page (linked from the footer).
+Dish photos come from Wikimedia Commons and carry their own licenses, listed with author and source on the Credits page (linked from the footer). Card icons are OpenMoji outlines (openmoji.org), CC BY-SA 4.0, credited on the same page.
 
 Progress is saved in your browser. Audio uses your device’s built-in text-to-speech voices, so quality varies and a language may be missing on some devices.
 
@@ -30,6 +30,7 @@ index.html            page shell; lists the scripts in load order
 css/styles.css        all styles, light and dark themes
 js/data/              course content: one file per language, plus course structure, Hangul data and dish photo credits
 images/dishes/        dish photos, one JPEG per card id
+images/icons/         card icons: OpenMoji outline SVGs, one per code in js/data/icons.js
 js/cards.js           turns the data rows into card objects
 js/core.js            saved progress, helpers, audio
 js/ai.js              asks Claude for JSON, in either place the site runs

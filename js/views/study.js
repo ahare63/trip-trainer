@@ -48,19 +48,20 @@ function renderStudy(){
     return;
   }
   const it=session.q[session.i],k=it.k,recog=isRecog(k),isNew=!state.cards[k.id]&&!it.retry;
-  const answer=`<div class="nat" lang="${C[k.c].hl}">${h(k.nat)}</div>${breakdown(k,studyLetters,'data-letters="1"')}
-    <div class="say"><small>Sounds like</small>${h(k.say)}</div>
-    <div class="rom"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`;
+  /* dish notes describe the food and stay in view; every other note is a usage tip and goes in More info */
+  const more=withNote=>`<details class="more"${state.more?" open":""}><summary>More info</summary>${breakdown(k,studyLetters,'data-letters="1"')}
+    <div class="rom"><small>Standard romanization</small>${h(k.rom)}</div>${withNote&&k.note?`<div class="more-note">${h(k.note)}</div>`:""}</details>`;
   let body;
   if(recog){
     body=`<div class="ask">${isDish(k)?"You see this on a menu. What is it?":"What does this say?"}</div>
-      <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>${session.shown?breakdown(k,studyLetters,'data-letters="1"'):""}
+      <div class="nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div>
       ${isDish(k)?`<div class="say"><small>Sounds like</small>${h(k.say)}</div>`:""}
-      ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${!isDish(k)?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div><div class="rom" style="margin-bottom:8px"><small>Standard romanization</small>${h(k.rom)}</div>${toneLine(k)}`:`<div class="rom" style="margin-bottom:8px">${h(k.rom)}</div>${toneLine(k)}`}${h(k.note)}</div>`:""}`;
+      ${session.shown?`<div class="note" style="border-top-style:solid">${dishPhoto(k)}${cardIcon(k)}<div class="en" style="margin:0 0 6px">${h(k.en)}</div>${!isDish(k)?`<div class="say" style="margin:0 0 6px"><small>Sounds like</small>${h(k.say)}</div>`:""}${toneLine(k)}${isDish(k)?h(k.note):""}</div>${more(!isDish(k))}`:""}`;
   }else{
     const sit=situationOf(k);
-    body=`${sit?`<div class="situation">${h(sit)}</div>`:""}<div class="ask">How do you say this in ${C[k.c].tongue}?</div><div class="en">${h(k.en)}</div>
-      ${session.shown?`<div style="margin-top:14px">${answer}</div>${k.note?`<div class="note">${h(k.note)}</div>`:""}`:""}`;
+    body=`${sit?`<div class="situation">${h(sit)}</div>`:""}<div class="ask">How do you say this in ${C[k.c].tongue}?</div>${cardIcon(k)}<div class="en">${h(k.en)}</div>
+      ${session.shown?`<div style="margin-top:14px"><div class="nat" lang="${C[k.c].hl}">${h(k.nat)}</div>
+      <div class="say"><small>Sounds like</small>${h(k.say)}</div>${toneLine(k)}${more(true)}</div>`:""}`;
   }
   el.innerHTML=`<h2>Today’s cards</h2><div style="margin-top:14px">${chips}</div>
   <div class="card" data-c="${k.c}">
