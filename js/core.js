@@ -3,7 +3,7 @@
 /* ---------- state ---------- */
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
-function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,more:false,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{}}}
+function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,more:false,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{},skip:[]}}
 /* a country key of C; C[c] alone would also accept inherited keys such as "constructor" */
 const isCountry=c=>typeof c==="string"&&Object.prototype.hasOwnProperty.call(C,c);
 /* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
@@ -39,13 +39,20 @@ function cleanNotes(o,trip){
   Object.keys(o).forEach(id=>{const n=o[id];
     if(ids.has(id)&&n&&typeof n==="object"&&typeof n.body==="string"&&n.body.trim()&&n.body.length<=NOTE_MAX&&typeof n.at==="number"&&isFinite(n.at))out[id]={body:n.body,at:n.at}});
   return out}
+/* skipped course cards: ids of cards in the course (not trip cards), each once */
+function cleanSkip(a){const ids=new Set(CARDS.filter(k=>k.cat!=="trip").map(k=>k.id));
+  return (Array.isArray(a)?a:[]).filter((id,i,all)=>typeof id==="string"&&ids.has(id)&&all.indexOf(id)===i)}
+const isSkipped=id=>state.skip.includes(id);
+/* the cards in play for study, plan counts and Talk: everything but skipped cards */
+const studyCards=()=>CARDS.filter(k=>!isSkipped(k.id));
+function setSkipped(id,on){state.skip=state.skip.filter(x=>x!==id);if(on)state.skip.push(id);state.skip=cleanSkip(state.skip);commit()}
 function syncTrip(){
   for(let i=CARDS.length-1;i>=0;i--)if(CARDS[i].cat==="trip")CARDS.splice(i,1);
   state.trip.forEach((x,i)=>CARDS.push({id:x.id,c:x.c,wk:0,cat:"trip",kind:x.kind,en:x.en,nat:x.nat,rom:x.rom,say:x.say,note:x.note,ord:i}))}
 function normalize(s){const b=blank();if(!s||typeof s!=="object")return b;
   const trip=cleanList(s.trip);
   return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,more:s.more===true,updated:+s.updated||0,
-    trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip)}}
+    trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip),skip:cleanSkip(s.skip)}}
 let state=blank();
 try{const s=localStorage.getItem(KEY);if(s)state=normalize(JSON.parse(s))}catch(e){}
 syncTrip();
@@ -79,7 +86,8 @@ const h=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"
 const curWeek=()=>Math.max(1,Math.min(8,Math.floor((today()-state.start)/7)+1));
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 let toastTimer;
-function toast(msg){const t=$("#toast");t.textContent=msg;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",4500)}
+/* act: optional button HTML, such as an Undo, shown after the message */
+function toast(msg,act){const t=$("#toast");t.innerHTML=h(msg)+(act?" "+act:"");t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",act?8000:4500)}
 const bul=c=>`<span class="bul" data-c="${c}">${C[c].code}</span>`;
 const hearBtn=(text,c,label)=>`<button class="hear" data-c="${c}" data-say="${h(text)}">${label||"Hear it"}</button>`;
 const signClass=k=>k.cat==="sign"?` sign sign-${h(SIGN_STYLE[k.id])}`:"";

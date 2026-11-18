@@ -69,7 +69,7 @@ const byIdOf=cards=>{const o={};cards.forEach(k=>o[k.id]=k);return o};
   {
     const v2=D.talkVocab("tw",W2,D.CARDS,STALL.cats);
     eq(v2.length,byC(2,"tw"),"week 2, Taiwan: every seen Mandarin card is allowed");
-    eq(v2.length,41,"week 2, Taiwan: the 41 cards of weeks 1 and 2");
+    eq(v2.length,42,"week 2, Taiwan: the 42 cards of weeks 1 and 2");
     ok(v2.every(k=>k.c==="tw"&&W2[k.id]),"week 2, Taiwan: only seen Mandarin cards");
     ok(!v2.some(k=>k.id==="tw-around-night-market"),"week 2, Taiwan: a week-4 card is not allowed");
     eq(D.talkVocab("kr",W2,D.CARDS,[]).length,0,"week 2, Korea: nothing seen, nothing allowed");
@@ -86,7 +86,7 @@ const byIdOf=cards=>{const o={};cards.forEach(k=>o[k.id]=k);return o};
     eq(D.talkVocab("jp",W7,D.CARDS,[]).length,46,"week 7, Japan: 46 cards (basics, ordering, dishes)");
     const odd=Object.assign({},W2,{"tw-gone-card":{b:3,due:0},"kr-basics-hello":{b:3,due:0}});
     const vo=D.talkVocab("tw",odd,D.CARDS,[]);
-    ok(!vo.some(k=>k.id==="tw-gone-card")&&vo.length===41,"progress for an id not in CARDS is ignored");
+    ok(!vo.some(k=>k.id==="tw-gone-card")&&vo.length===42,"progress for an id not in CARDS is ignored");
     eq(D.talkVocab("kr",odd,D.CARDS,[]).map(k=>k.id).join(),"kr-basics-hello","a seen card counts only for its own language");
 
     /* the cap: scene categories first, then best-known first */
@@ -99,7 +99,7 @@ const byIdOf=cards=>{const o={};cards.forEach(k=>o[k.id]=k);return o};
     const capped=D.talkVocab("tw",big,D.CARDS,["order","num"]);
     eq(capped.length,D.TALK_VOCAB,"cap: the list is cut to TALK_VOCAB");
     const cats=capped.map(k=>k.cat);
-    ok(cats.slice(0,11).every(c=>c==="order")&&cats.slice(11,22).every(c=>c==="num"),"cap: the scene’s categories come first, in order");
+    ok(cats.slice(0,12).every(c=>c==="order")&&cats.slice(12,23).every(c=>c==="num"),"cap: the scene’s categories come first, in order");
     const order=capped.filter(k=>k.cat==="order").map(k=>big[k.id].b);
     ok(order.every((b,i)=>i===0||order[i-1]>=b),"cap: within a category, best-known cards first");
     const hotel=D.talkVocab("tw",big,D.CARDS,["trip","basics"]);

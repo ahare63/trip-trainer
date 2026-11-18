@@ -33,6 +33,7 @@ Object.assign(PARTS,{
 "tw-order-not-spicy-please":{parts:[["不","not"],["要","want"],["辣","spicy"]]},
 "tw-order-i-m-vegetarian":{parts:[["我","I"],["吃","eat"],["素","vegetarian food"]],lit:"I eat plain"},
 "tw-order-half-sugar":{parts:[["半","half"],["糖","sugar"]]},
+"tw-order-regular-ice":{parts:[["正常","normal"],["冰","ice"]]},
 "tw-order-less-ice":{parts:[["少","less"],["冰","ice"]]},
 "tw-order-no-ice":{parts:[["去","remove"],["冰","ice"]]},
 "tw-dish-beef-noodle-soup":{parts:[["牛肉","beef"],["麵","noodles"]]},

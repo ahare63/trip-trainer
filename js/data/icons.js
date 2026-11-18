@@ -134,6 +134,7 @@ const ICON={
   "tw-order-not-spicy-please":"1F336+1F6AB",
   "tw-order-i-m-vegetarian":"1F966",
   "tw-order-half-sugar":"1F36C",
+  "tw-order-regular-ice":"1F9CA",
   "tw-order-less-ice":"1F9CA",
   "tw-order-no-ice":"1F9CA+1F6AB",
   "tw-num-one":"0031-FE0F-20E3",

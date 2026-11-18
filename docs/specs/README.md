@@ -19,5 +19,6 @@ Each spec is written to be handed to a fresh agent together with `docs/ARCHITECT
 | 10 | Before you go: reading notes | 06 | Sonnet 5.5 with web access |
 | 11 | Timeline from a screenshot | 07c, 09 | Opus 5.5 |
 | 12 | Card icons and a “More info” section | 04b, 05 | Opus 5.5 |
+| 13 | Skip a card | 08, 12 | Opus 5.5 |
 
 Several specs add a script to `index.html` and a check to `tools/validate.js`. If two are done in parallel, expect small merge conflicts in those two files.

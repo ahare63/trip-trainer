@@ -10,6 +10,7 @@ const SITUATION_BY_CAT={
 };
 const SITUATION={
   "tw-order-half-sugar":"At a bubble tea counter",
+  "tw-order-regular-ice":"At a bubble tea counter",
   "tw-order-less-ice":"At a bubble tea counter",
   "tw-order-no-ice":"At a bubble tea counter",
   "tw-order-the-bill-please":"When paying",
