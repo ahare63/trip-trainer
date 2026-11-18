@@ -111,6 +111,9 @@ main{padding:28px 0 60px}
 .card .acts{margin-top:auto;padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .card .acts .wide{grid-column:1/-1}
 .card .acts .btn{text-align:center}
+.card .skip{margin-top:12px;display:flex;justify-content:flex-end}
+.entry .e-skip{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#toast .btn{margin-left:8px;color:var(--paper);border-color:var(--paper)}
 .hear{border:1.5px solid var(--c,var(--ink));color:var(--c,var(--ink));background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:600;white-space:nowrap}
 .hear::before{content:"▶ ";font-size:.7em}
 

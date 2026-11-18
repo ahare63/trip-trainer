@@ -17,4 +17,5 @@ jobs:
       - run: node tools/test-shot.js
       - run: node tools/test-tlshot.js
       - run: node tools/test-cards.js
+      - run: node tools/test-skip.js
       - run: node tools/bundle.js

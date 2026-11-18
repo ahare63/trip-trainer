@@ -4,7 +4,7 @@ const tk={c:"",def:null,scene:null,busy:false,step:"",run:0,text:"",more:false,e
 const TALK_CHIPS=12;
 const TALK_HINT={tw:"wo yao zhege",kr:"igeo juseyo",jp:"kore o kudasai"};
 const talkMsg=code=>code==="no_key"?"Add your Anthropic API key on the Your trip tab first. Nothing was added.":aiMessage(code);
-const talkDefaultC=()=>["tw","kr","jp"].find(c=>talkVocab(c,state.cards,CARDS,[]).length>=TALK_MIN_VOCAB)||"tw";
+const talkDefaultC=()=>["tw","kr","jp"].find(c=>talkVocab(c,state.cards,studyCards(),[]).length>=TALK_MIN_VOCAB)||"tw";
 const talkRefuse=code=>async()=>{throw {code}};
 
 function talkLineHTML(s,e,i){
@@ -62,7 +62,7 @@ function talkSceneHTML(){
     ${s&&s.stage==="ended"?`<p class="err" role="alert">${h(s.end)}</p><div class="row"><button class="btn" data-talk="close">Back to scenes</button></div>`:""}
     ${s&&s.stage==="feedback"?talkFeedbackHTML(s):""}</div>`}
 function talkListHTML(){
-  const n=talkVocab(tk.c,state.cards,CARDS,[]).length,why=talkReady(SCENES.find(x=>x.c===tk.c),state.cards,CARDS);
+  const n=talkVocab(tk.c,state.cards,studyCards(),[]).length,why=talkReady(SCENES.find(x=>x.c===tk.c),state.cards,studyCards());
   const off=why||AI.mode==="none"||tk.busy?" disabled":"";
   return `<div class="chips" role="group" aria-label="Language" style="margin-top:18px">${["tw","kr","jp"].map(c=>`<button class="chip" data-talkc="${c}" aria-pressed="${tk.c===c}">${C[c].tongue}</button>`).join("")}</div>
     ${tk.msg?`<p class="meta" role="status" style="margin-top:12px">${h(tk.msg)}</p>`:""}
@@ -87,7 +87,7 @@ async function talkBegin(id){
   await aiReady;
   const stop=aiStop();
   if(stop){if(run===tk.run){talkReset(talkMsg(stop));renderTalk()}return}
-  const s=await talkStart(def,state.cards,CARDS,askJSON);
+  const s=await talkStart(def,state.cards,studyCards(),askJSON);
   if(run!==tk.run)return;
   tk.scene=s;tk.busy=false;tk.step="";renderTalk()}
 async function talkSend(){

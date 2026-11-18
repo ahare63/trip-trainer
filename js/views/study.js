@@ -11,14 +11,15 @@ function breakdown(k,letters,toggle){
 function buildQueue(filter,ahead){
   const t=today(),w=curWeek();
   const ok=k=>filter==="all"||k.c===filter;
-  const due=CARDS.filter(k=>ok(k)&&state.cards[k.id]&&state.cards[k.id].due<=t);
-  let fresh=CARDS.filter(k=>ok(k)&&!state.cards[k.id]&&(k.wk<=w||ahead)).sort((a,b)=>a.wk-b.wk||a.ord-b.ord);
+  const cards=studyCards();
+  const due=cards.filter(k=>ok(k)&&state.cards[k.id]&&state.cards[k.id].due<=t);
+  let fresh=cards.filter(k=>ok(k)&&!state.cards[k.id]&&(k.wk<=w||ahead)).sort((a,b)=>a.wk-b.wk||a.ord-b.ord);
   const allow=ahead?8:Math.max(0,NEW_PER_DAY-(state.day===t?state.newDone:0));
   return shuffle(due).concat(fresh.slice(0,allow)).map(k=>({k,retry:false}));
 }
 function startSession(filter,ahead,practice){
   let q=buildQueue(filter,ahead);
-  if(practice){q=shuffle(CARDS.filter(k=>(filter==="all"||k.c===filter)&&state.cards[k.id])).slice(0,12).map(k=>({k,retry:true}))}
+  if(practice){q=shuffle(studyCards().filter(k=>(filter==="all"||k.c===filter)&&state.cards[k.id])).slice(0,12).map(k=>({k,retry:true}))}
   session={filter,q,i:0,shown:false,done:0,practice:!!practice};
 }
 function grade(ok){
@@ -34,13 +35,27 @@ function grade(ok){
   if(!ok)session.q.push({k,retry:true}); else session.done++;
   session.i++;session.shown=false;renderStudy();
 }
+/* skip: takes every remaining copy of the card out of the session, ungraded, and offers Undo */
+let skipUndo=null;
+function skipNow(id){
+  if(!session)return; const it=session.q[session.i]; if(!it||it.k.id!==id||it.k.cat==="trip")return;
+  session.q=session.q.slice(0,session.i).concat(session.q.slice(session.i).filter(x=>x.k.id!==id));session.shown=false;
+  skipUndo={id,it};setSkipped(id,true);renderStudy();
+  toast("Skipped “"+it.k.en+"”. It stays in the phrasebook.",`<button class="btn ghost small" data-undoskip="${h(id)}">Undo</button>`);
+}
+function undoSkip(id){
+  setSkipped(id,false);
+  if(skipUndo&&skipUndo.id===id&&session){session.q.splice(session.i,0,skipUndo.it);session.shown=false}
+  skipUndo=null;$("#toast").style.display="none";
+  render();
+}
 function renderStudy(){
   if(!session)startSession("all");
   const el=$("#v-study"),left=session.q.length-session.i;
   const chips=`<div class="chips" role="group" aria-label="Country">${[["all","All three"],["tw","Taiwan"],["kr","Korea"],["jp","Japan"]].map(x=>`<button class="chip" data-filter="${x[0]}" aria-pressed="${session.filter===x[0]}">${x[1]}</button>`).join("")}</div>`;
   if(left<=0){
-    const more=CARDS.some(k=>!state.cards[k.id]&&(session.filter==="all"||k.c===session.filter));
-    const any=CARDS.some(k=>state.cards[k.id]&&(session.filter==="all"||k.c===session.filter));
+    const more=studyCards().some(k=>!state.cards[k.id]&&(session.filter==="all"||k.c===session.filter));
+    const any=studyCards().some(k=>state.cards[k.id]&&(session.filter==="all"||k.c===session.filter));
     el.innerHTML=`<h2>Today’s cards</h2><div style="margin-top:14px">${chips}</div>
     <div class="panel"><h3>${session.done?"Done for today":"Nothing due right now"}</h3>
     <p style="margin-top:8px;max-width:56ch">${session.done?`You went through ${session.done} card${session.done===1?"":"s"}. `:""}Cards you got right come back after a growing gap: one day, then two, four, eight and sixteen. Cards you missed return tomorrow.</p>
@@ -72,6 +87,7 @@ function renderStudy(){
       ${session.shown?`<button class="btn ghost" data-grade="0">Still learning</button><button class="btn" data-grade="1">Got it</button>`
         :`<button class="btn wide" data-show="1">Show answer</button>`}
     </div>
+    ${k.cat!=="trip"?`<div class="skip"><button class="btn ghost small" data-skip="${h(k.id)}">Skip this card</button></div>`:""}
   </div>
   <p class="meta" style="margin-top:12px"><label><input type="checkbox" id="auto" ${state.auto?"checked":""}> Play the audio when the answer appears</label><br>Keyboard: space shows the answer, 1 is still learning, 2 is got it.</p>`;
 }

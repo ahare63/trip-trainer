@@ -1,15 +1,15 @@
 "use strict";
 /* ---------- plan ---------- */
 let selWeek=null;
-function stats(c){const all=CARDS.filter(k=>k.c===c);let seen=0,solid=0;
+function stats(c){const all=studyCards().filter(k=>k.c===c);let seen=0,solid=0;
   all.forEach(k=>{const p=state.cards[k.id];if(p){seen++;if(p.b>=3)solid++}});return {n:all.length,seen,solid}}
 function dueCount(){const t=today(),w=curWeek();let due=0,fresh=0;
-  CARDS.forEach(k=>{const p=state.cards[k.id];if(p){if(p.due<=t)due++}else if(k.wk<=w)fresh++});
+  studyCards().forEach(k=>{const p=state.cards[k.id];if(p){if(p.due<=t)due++}else if(k.wk<=w)fresh++});
   const allow=Math.max(0,NEW_PER_DAY-(state.day===t?state.newDone:0));return {due,fresh:Math.min(fresh,allow)}}
 function renderPlan(){
   const w=curWeek(); if(selWeek==null)selWeek=w;
   const wk=WEEKS[selWeek-1], d=dueCount(), total=d.due+d.fresh;
-  const counts=["tw","kr","jp"].map(c=>[c,CARDS.filter(k=>k.c===c&&k.wk===selWeek).length]).filter(x=>x[1]);
+  const counts=["tw","kr","jp"].map(c=>[c,studyCards().filter(k=>k.c===c&&k.wk===selWeek).length]).filter(x=>x[1]);
   const startDate=new Date((state.start)*864e5+new Date().getTimezoneOffset()*60000).toLocaleDateString(undefined,{month:"short",day:"numeric"});
   $("#v-plan").innerHTML=`
   <h1>Eight weeks to Taiwan, Korea and Tokyo</h1>

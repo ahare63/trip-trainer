@@ -18,6 +18,7 @@ function renderPhrasebook(keepFocus){
   $("#pb-list").innerHTML=list.length?list.map(k=>`<div class="entry" data-c="${k.c}">
     <div><div class="e-en">${h(k.en)} <span class="meta" style="font-weight:400">${C[k.c].name}, ${CATS[k.cat].toLowerCase()}</span></div>
     ${situationOf(k)?`<div class="e-sit">${h(situationOf(k))}</div>`:""}
+    ${isSkipped(k.id)?`<div class="e-skip"><span class="meta">Skipped in study</span> <button class="btn ghost small" data-unskip="${h(k.id)}">Bring back to study</button></div>`:""}
     <div class="e-nat${signClass(k)}" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}${PARTS[k.id]?`<div><button class="btn ghost small" data-pb-break="${h(k.id)}" aria-expanded="${!!pbOpen[k.id]}">Breakdown</button></div>${pbOpen[k.id]?breakdown(k,pbLetters,'data-pb-letters="1"'):""}`:""}</div>
     ${hearBtn(k.nat,k.c)}
     ${k.cat==="dish"?dishPhoto(k,true):""}

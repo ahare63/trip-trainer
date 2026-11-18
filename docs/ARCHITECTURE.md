@@ -185,16 +185,18 @@ The answer side of a study card (`renderStudy()` in `js/views/study.js`) shows w
 - Always visible: the icon (or dish photo), the native text, the sounds-like spelling, the audio button and, on Taiwan cards, the tone line. Recognition cards also show the English. Dish cards, course or trip, keep their note visible, since it describes the food.
 - In “More info”: the breakdown (with its literal translation and the Korean “Show letters” toggle), the standard romanization and, except on dish cards, the note.
 - `node tools/test-cards.js` renders real cards and checks what sits where.
+- Course cards have a “Skip this card” button on both sides; trip cards don’t (they have Remove on Your trip). `skipNow(id)` drops every remaining copy from the session ungraded, adds the id to `state.skip` and shows a toast with Undo; `undoSkip(id)` puts the card back at the current spot. The phrasebook marks skipped cards and offers “Bring back to study.” Anything that counts or picks cards for study (the study queue, practice, Plan totals and due counts, Talk vocabulary and readiness) uses `studyCards()`, which is `CARDS` without skipped cards; the phrasebook and Essentials use `CARDS`. `node tools/test-skip.js` covers this.
 
 ## Saved progress
 
 `state` in `js/core.js`, stored under the `localStorage` key `trip-phrasebook-v1`:
 
 ```js
-{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, more, updated, trip, hold, itin, timeline, notes }
+{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, more, updated, trip, hold, itin, timeline, notes, skip }
 ```
 
 - `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.” `notes`: `{ [tripCardId]: { body, at } }`, see “Reading notes.”
+- `skip`: ids of skipped course cards, each once; `normalize()` drops anything that isn’t a course card id. Skipping keeps the card’s progress in `cards`, so bringing it back resumes it. Change it with `setSkipped(id, on)`.
 - `auto`: play the audio when an answer appears. `more`: whether “More info” on study cards was left open (only `true` counts; old data loads closed). The `toggle` listener in `js/main.js` saves it, in the capture phase since `toggle` doesn’t bubble, and only when it changed, because a card rendered already open fires `toggle` too.
 - `start`, `due`, `day`, `lastDay` are local day numbers from `today()`.
 - `b` is the review box, 1 to 5; gaps are `GAP = [0,1,2,4,8,16]` days.
@@ -221,7 +223,7 @@ The answer side of a study card (`renderStudy()` in `js/views/study.js`) shows w
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js`, `test-tlshot.js` and `test-cards.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js`, `test-tlshot.js`, `test-cards.js` and `test-skip.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.
