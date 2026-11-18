@@ -40,12 +40,13 @@ let skipUndo=null;
 function skipNow(id){
   if(!session)return; const it=session.q[session.i]; if(!it||it.k.id!==id||it.k.cat==="trip")return;
   session.q=session.q.slice(0,session.i).concat(session.q.slice(session.i).filter(x=>x.k.id!==id));session.shown=false;
-  skipUndo={id,it};setSkipped(id,true);renderStudy();
+  skipUndo={id,it,session};setSkipped(id,true);renderStudy();
   toast("Skipped “"+it.k.en+"”. It stays in the phrasebook.",`<button class="btn ghost small" data-undoskip="${h(id)}">Undo</button>`);
 }
 function undoSkip(id){
   setSkipped(id,false);
-  if(skipUndo&&skipUndo.id===id&&session){session.q.splice(session.i,0,skipUndo.it);session.shown=false}
+  /* only back into the session it came from, and only if it isn’t already queued there */
+  if(skipUndo&&skipUndo.id===id&&session&&session===skipUndo.session&&!session.q.slice(session.i).some(x=>x.k.id===id)){session.q.splice(session.i,0,skipUndo.it);session.shown=false}
   skipUndo=null;$("#toast").style.display="none";
   render();
 }
@@ -87,7 +88,7 @@ function renderStudy(){
       ${session.shown?`<button class="btn ghost" data-grade="0">Still learning</button><button class="btn" data-grade="1">Got it</button>`
         :`<button class="btn wide" data-show="1">Show answer</button>`}
     </div>
-    ${k.cat!=="trip"?`<div class="skip"><button class="btn ghost small" data-skip="${h(k.id)}">Skip this card</button></div>`:""}
+    ${k.cat!=="trip"&&!session.ess?`<div class="skip"><button class="btn ghost small" data-skip="${h(k.id)}">Skip this card</button></div>`:""}
   </div>
   <p class="meta" style="margin-top:12px"><label><input type="checkbox" id="auto" ${state.auto?"checked":""}> Play the audio when the answer appears</label><br>Keyboard: space shows the answer, 1 is still learning, 2 is got it.</p>`;
 }

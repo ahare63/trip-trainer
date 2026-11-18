@@ -26,7 +26,7 @@ document.addEventListener("click",e=>{
   if(d.pbLetters){pbLetters=!pbLetters;renderPhrasebook();return}
   if(d.skip){skipNow(d.skip);return}
   if(d.undoskip){undoSkip(d.undoskip);return}
-  if(d.unskip){setSkipped(d.unskip,false);session=null;renderPhrasebook();return}
+  if(d.unskip){setSkipped(d.unskip,false);renderPhrasebook();return}
   if(d.grade){grade(d.grade==="1");return}
   if(d.sub){sub=d.sub;renderScripts();return}
   if(d.letter){selLetter=+d.letter;renderScripts();speak(letterSay(LETTERS[selLetter]),"kr");return}
@@ -50,7 +50,7 @@ document.addEventListener("click",e=>{
   if(d.note){noteAct(d.note,d.id);return}
   if(d.tripdel){removeTripCard(d.tripdel);delete nv.err[d.tripdel];delete nv.open[d.tripdel];session=null;renderTrip();return}
   if(d.essc){essC=d.essc;renderEssentials();return}
-  if(d.essquiz){const cs=essC==="all"?["tw","kr","jp"]:[essC];session={filter:"all",q:shuffle(essList(cs)).map(k=>({k,retry:true})),i:0,shown:false,done:0,practice:true};location.hash="study";return}
+  if(d.essquiz){const cs=essC==="all"?["tw","kr","jp"]:[essC];session={filter:"all",q:shuffle(essList(cs)).map(k=>({k,retry:true})),i:0,shown:false,done:0,practice:true,ess:true};location.hash="study";return}
 });
 function reveal(){
   if(!session||session.shown)return; session.shown=true; renderStudy();

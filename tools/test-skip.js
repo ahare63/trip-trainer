@@ -82,8 +82,11 @@ const session=(ks,shown,practice)=>A.D.setSession({filter:"all",q:ks.map(k=>({k,
   let seenVeg=false;
   for(let i=0;i<20;i++){A.D.startSession("all",false,true);if(A.D.getSession().q.some(x=>x.k.id===veg.id))seenVeg=true}
   ok(!seenVeg,"practice: a skipped card is never picked");
+  ok([half,beef].every(k=>A.D.getSession().q.some(x=>x.k.id===k.id)),"practice: the other seen cards are still picked");
   A.D.startSession("all");
   ok(!A.D.getSession().q.some(x=>x.k.id===veg.id),"today’s queue: a skipped due card is left out");
+  ok([half,beef].every(k=>A.D.getSession().q.some(x=>x.k.id===k.id)),"today’s queue: the other due cards are still there");
+  ok(A.saved().cards[veg.id].b===3,"skip keeps the card’s saved progress");
   A.D.startSession("all",true);
   ok(!A.D.getSession().q.some(x=>x.k.id===veg.id),"learn more: a skipped card is left out");
 }
@@ -118,6 +121,49 @@ const session=(ks,shown,practice)=>A.D.setSession({filter:"all",q:ks.map(k=>({k,
   ok(B.view("phrasebook")&&B.el("pb-list").innerHTML.includes(BACK),"undo elsewhere: the phrasebook shows the skip");
   B.click(B.toast(),"Undo");
   ok(!B.el("pb-list").innerHTML.includes(BACK),"undo elsewhere: the phrasebook updates when Undo is pressed there");
+}
+
+/* ===== Undo only goes back into the session the skip came from ===== */
+{
+  const B=boot(),st=B.D.blank();B.D.setState(st);
+  const k=B.D.CARDS.find(x=>x.c==="tw"&&x.en==="I’m vegetarian"),kr=B.D.CARDS.find(x=>x.c==="kr"&&x.en==="Hello");
+  st.cards[k.id]={b:4,due:st.start+5};st.cards[kr.id]={b:1,due:st.start};
+  B.D.setSession({filter:"all",q:[{k,retry:true}],i:0,shown:false,done:0,practice:true});
+  B.click(B.view("study"),SKIP);
+  B.click(B.studyHTML(),"Korea");
+  B.click(B.toast(),"Undo");
+  ok(!shows(B.studyHTML(),k),"undo after switching to Korea: the Taiwan card isn’t put into the Korean session");
+  B.D.startSession("all");
+  ok(B.D.getSession().q.filter(x=>x.k.id===k.id).length===0&&B.saved().cards[k.id].b===4,"undo after switching: the card keeps box 4 and comes back on its own schedule");
+}
+{
+  const B=boot(),st=B.D.blank();B.D.setState(st);
+  const k=B.D.CARDS.find(x=>x.c==="tw"&&x.en==="I’m vegetarian");
+  st.cards[k.id]={b:2,due:st.start};
+  B.D.setSession({filter:"all",q:[{k,retry:false}],i:0,shown:false,done:0,practice:false});
+  B.click(B.view("study"),SKIP);
+  B.view("phrasebook");B.click(B.el("pb-list").innerHTML,BACK);
+  B.D.startSession("all");
+  B.click(B.toast(),"Undo");
+  ok(B.D.getSession().q.filter(x=>x.k.id===k.id).length===1,"bring back, new session, then Undo: the card is in the session once");
+}
+
+/* ===== bringing a card back doesn’t throw away the session in progress ===== */
+{
+  const B=boot();B.D.setState(B.D.blank());
+  const k=B.D.CARDS.find(x=>x.c==="tw"&&x.en==="I’m vegetarian");
+  B.D.setSession({filter:"all",q:[{k,retry:false},{k:half,retry:false},{k:beef,retry:false}],i:0,shown:false,done:0,practice:false});
+  B.click(B.view("study"),SKIP);
+  B.view("phrasebook");B.click(B.el("pb-list").innerHTML,BACK);
+  ok(/[> ]2 left</.test(B.view("study")),"bring back: the study session in progress keeps its place");
+}
+
+/* ===== the Essentials quiz has no skip ===== */
+{
+  const B=boot();B.D.setState(B.D.blank());
+  B.view("essentials");
+  ok(B.click(B.el("v-essentials").innerHTML,"Quiz"),"essentials: the quiz can be started");
+  ok(!B.view("study").includes(SKIP),"essentials quiz: no Skip this card button");
 }
 
 /* ===== Plan totals ===== */
@@ -161,8 +207,11 @@ const session=(ks,shown,practice)=>A.D.setSession({filter:"all",q:ks.map(k=>({k,
   ok(/Taiwan<\/span>[\s\S]*? of /.test(old.view("plan"))&&old.view("plan").includes(" of "+n+"<"),"old saved data without skip: loads with nothing skipped");
   old.D.setSession({filter:"all",q:[{k:old.D.CARDS.find(x=>x.en==="I’m vegetarian"),retry:false}],i:0,shown:false,done:0,practice:false});
   ok(old.view("study").includes(SKIP),"old saved data without skip: Skip this card works");
-  const junk=boot({start:1,cards:{},updated:5,skip:["tw-order-i-m-vegetarian","tw-order-i-m-vegetarian","not-a-card",7,"trip-abcd1234",null]});
-  ok(junk.view("plan").includes(" of "+(n-1)+"<"),"saved skip list: keeps the one real course card once and drops the rest");
+  const trip=[{id:"trip-abcd1234",c:"tw",kind:"place",en:"Hotel Test",nat:"測試飯店",rom:"cèshì fàndiàn",say:"tseh-shr fahn-dyen",note:""}];
+  const junk=boot({start:1,cards:{},updated:5,trip,skip:["tw-order-i-m-vegetarian","tw-order-i-m-vegetarian","not-a-card",7,"trip-abcd1234",null]});
+  ok(junk.view("plan").includes(" of "+(junk.D.CARDS.filter(x=>x.c==="tw").length-1)+"<"),"saved skip list: the real course card is skipped");
+  junk.click(junk.view("plan"),"Skip ahead a week");
+  ok(JSON.stringify(junk.saved().skip)==='["tw-order-i-m-vegetarian"]',"saved skip list: keeps the one course card once and drops the rest, trip ids included");
 }
 
 /* ===== Regular ice card ===== */
