@@ -40,6 +40,7 @@ document.addEventListener("click",e=>{
   if(d.build){buildTrip();return}
   if(d.handadd){addByHand();return}
   if(d.quickadd){quickAddNow();return}
+  if(d.ns){nsAct(d.ns);return}
   if(d.bk){bookingAct(d.bk);return}
   if(d.quickfrom!=null){quickFrom(pb.q.trim(),pb.c);return}
   if(d.keyclear){setKey("");trip.err="";renderTrip();return}
@@ -66,12 +67,13 @@ document.addEventListener("change",e=>{
   if(e.target.id==="tl-shot"){const f=e.target.files[0];e.target.value="";tlShotPicked(f)}
   if(e.target.id==="tl-shot-attach"&&tlv.shot)tlv.shot.attach=e.target.checked;
   if(e.target.id==="bk-file"){const f=e.target.files[0];e.target.value="";bookingRead(f)}
+  if(e.target.dataset.nspick!=null&&ns.legs){const l=ns.legs[+e.target.dataset.nspick];if(l)l.on=e.target.checked}
   if(e.target.dataset.bkpick!=null&&bk.places){const p=bk.places[+e.target.dataset.bkpick];if(p)p.on=e.target.checked}
   if(e.target.id==="trip-key"){setKey(e.target.value.trim());trip.err="";renderTrip()}
 });
 /* toggle doesn't bubble, so listen in the capture phase; a card rendered already open fires it too, so save only real changes */
 document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("more")&&state.more!==e.target.open){state.more=e.target.open;commit()}},true);
-document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value;if(e.target.id==="talk-text")tk.text=e.target.value});
+document.addEventListener("input",e=>{if(e.target.id==="pb-q"){pb.q=e.target.value;renderPhrasebook()}if(e.target.id==="trip-text")trip.text=e.target.value;if(e.target.dataset.tlf&&tlv.f)tlv.f[e.target.dataset.tlf]=e.target.value;if(e.target.id==="hand-en")trip.hand.en=e.target.value;if(e.target.id==="hand-nat")trip.hand.nat=e.target.value;if(e.target.id==="quick-text")trip.quick.text=e.target.value;if(e.target.id==="talk-text")tk.text=e.target.value;if(e.target.id==="home-city"){ns.city=e.target.value;ns.homeMsg=""}if(e.target.id==="home-country"){ns.country=e.target.value;ns.homeMsg=""}});
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.isComposing&&e.target.id==="quick-text"){e.preventDefault();quickAddNow();return}
   if(e.key==="Enter"&&!e.isComposing&&e.target.id==="talk-text"){e.preventDefault();talkSend();return}

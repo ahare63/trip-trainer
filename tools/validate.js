@@ -12,7 +12,7 @@ for(const s of srcs)if(!fs.existsSync(path.join(root,s)))err("index.html loads a
 // load the data files and the card builder in a sandbox
 const dataFiles=srcs.filter(s=>s.startsWith("js/data/")||s==="js/cards.js"||s==="js/tones.js");
 const code=dataFiles.map(s=>fs.readFileSync(path.join(root,s),"utf8").replace(/^"use strict";/,"")).join("\n")
-  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,SCENES:typeof SCENES==='undefined'?undefined:SCENES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED,ICON:typeof ICON==='undefined'?undefined:ICON,ICON_FILE:typeof ICON_FILE==='undefined'?undefined:ICON_FILE,ICON_TRIP:typeof ICON_TRIP==='undefined'?undefined:ICON_TRIP})";
+  +"\n;({C,CATS,RECOG,WEEK_OF,RAW,WEEKS,ESS,INIT,MED,FIN_ALL,compose,splitHangul,LETTERS,WORDS,CARDS,PHOTOS,PHOTOS_MISSING,licenseURL:typeof licenseURL==='function'?licenseURL:()=>'',SITUATION_BY_CAT,SITUATION,situationOf,NOTES:typeof NOTES==='undefined'?undefined:NOTES,SCENES:typeof SCENES==='undefined'?undefined:SCENES,toneMarks,spokenTones:typeof spokenTones==='function'?spokenTones:()=>[],SIGN_STYLE:typeof SIGN_STYLE==='undefined'?undefined:SIGN_STYLE,PARTS:typeof PARTS==='undefined'?undefined:PARTS,PARTS_SKIPPED:typeof PARTS_SKIPPED==='undefined'?undefined:PARTS_SKIPPED,ICON:typeof ICON==='undefined'?undefined:ICON,ICON_FILE:typeof ICON_FILE==='undefined'?undefined:ICON_FILE,ICON_TRIP:typeof ICON_TRIP==='undefined'?undefined:ICON_TRIP,PLACE_NAMES:typeof PLACE_NAMES==='undefined'?undefined:PLACE_NAMES})";
 let D;
 try{D=vm.runInNewContext(code,{},{filename:"data"})}catch(e){console.error("Data files failed to load: "+e.message);process.exit(1)}
 
@@ -241,6 +241,16 @@ else{
   });
   Object.keys(D.C).forEach(c=>{if(D.SCENES.filter(x=>x&&x.c===c).length<5)err("SCENES: "+c+" needs at least 5 scenes")});
 }
+
+/* country names for next-stop cards: exactly the six pairs where the language and the country differ */
+if(!D.PLACE_NAMES||typeof D.PLACE_NAMES!=="object")err("js/data/places.js must be loaded in index.html and define PLACE_NAMES");
+else{
+  const want=["tw|kr","tw|jp","kr|tw","kr|jp","jp|tw","jp|kr"];
+  const got=Object.keys(D.PLACE_NAMES).flatMap(l=>Object.keys(D.PLACE_NAMES[l]||{}).map(c=>l+"|"+c));
+  if(got.sort().join()!==want.slice().sort().join())err("PLACE_NAMES must have exactly these pairs: "+want.join(", ")+" (has "+got.join(", ")+")");
+  got.forEach(p=>{const [l,c]=p.split("|"),x=D.PLACE_NAMES[l][c];
+    if(!x||typeof x.nat!=="string"||!scriptOK[l]||!scriptOK[l](x.nat))err("PLACE_NAMES "+p+": nat is not in the right script for "+l);
+    if(!x||!x.rom||!x.say)err("PLACE_NAMES "+p+": rom and say must be filled")})}
 
 const per=Object.keys(D.RAW).map(c=>c+" "+D.RAW[c].length).join(", ");
 if(errors.length){console.error(errors.length+" problem(s):\n- "+errors.join("\n- "));process.exit(1)}

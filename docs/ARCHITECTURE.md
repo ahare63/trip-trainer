@@ -27,6 +27,7 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 5. `js/data/signs.js`: `SIGN_STYLE`, the drawn style of each sign card, keyed by card id
 6. `js/data/situations.js`: `SITUATION_BY_CAT`, `SITUATION`, `situationOf()`
 7. `js/data/notes.js`: `NOTES`, the built-in reading notes (see “Reading notes”)
+   - `js/data/places.js`: `PLACE_NAMES`, country names as a local says them (see “Next stop and home”)
 8. `js/data/scenes.js`: `SCENES`, the role-play scenarios (see “Conversation partner”)
 9. `js/data/parts-tw.js`, `parts-kr.js`, `parts-jp.js`: `PARTS` (card id to `{ parts: [[chunk, gloss], ...], lit }`, the word and character breakdowns) and `PARTS_SKIPPED`; `parts-tw.js` creates both and the other two add to them
 10. `js/cards.js`: builds `CARDS`
@@ -38,8 +39,9 @@ Code must work in both. Feature-detect `window.claude`; never assume it.
 16. `js/notes.js`: the generated notes with no page access: `writeNote()`, `applyNote()`, `deleteNote()`, `noteParas()` (see “Reading notes”)
 17. `js/timeline.js`: the trip timeline with no page access: `tl`, `tlSorted`, `tlFilter`, `tlSplit`, `tlNextUp`, `todayISO`, `tlSave`, `tlAssetsInit`, `tlAttach`, `tlDropFile`, `tlDelete` (see “Trip timeline”)
 18. `js/tlshot.js`: filling timeline entries from a booking screenshot, with no page access: `tlShotPrompt()`, `readTimelineShot()`, `tlAddFromShot()` (see “Timeline from a screenshot”)
+   - `js/nextstop.js`: next-stop and home cards with no page access: `nextStopEntries`, `nextStopsPrompt`, `nextStopLegs`, `nextStopPhrases`, `nextStopCards` (see “Next stop and home”)
 19. `js/partner.js`: the conversation partner with no page access: `talkVocab`, `talkReady`, `talkFits`, `talkCheckLine`, `talkIsHowTo`, `talkChips`, `talkStart`, `talkSay`, `talkStop`, `talkOffer`, `TALK_GLUE` (see “Conversation partner”)
-20. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the credits page (card icons and dish photos), linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes)
+20. `js/views/*.js`: one `render…()` function per screen (`talk.js` is “Talk”, the conversation partner; `notes.js` is the “Before you go” panel, `notesHTML()`, also included by `renderTrip()`; `credits.js` is the credits page (card icons and dish photos), linked from the footer rather than the tabs; `trip.js` is “Your trip”; `timeline.js` is not a screen but the timeline panel, `timelineHTML()`, which `renderTrip()` includes; `trip.js` also holds the About you and next-stop panels, `homeHTML()` and `nextStopHTML()`)
 21. `js/main.js`: `VIEWS`, `RENDER`, `render()`, all event listeners; starts the app
 
 A new script must be added to `index.html` in the right position. `tools/bundle.js` and `tools/validate.js` read the script list from `index.html`, so nothing else needs updating.
@@ -135,6 +137,17 @@ Flights, trains, hotels and bookings the learner enters on “Your trip”, in `
 - **Reviewing**: the view (`tlShotPicked()`, `tlShotSave()` in `js/views/timeline.js`) opens the entry form filled with each entry in turn (“1 of 2”), with Skip and Cancel, and says how many entries were left out. The screenshot button is disabled while any entry form is open, so a draft is never replaced. Reading saves nothing. `tlAddFromShot(fields, file, attach)` saves through `tlSave()` and, only if the learner ticked “Attach this screenshot” (shown only when `tl.assets` is set), attaches it through `tlAttach()`. If attaching fails the entry is kept and a warning is shown. The file is held in `tlv.shot` only until the last entry is saved, skipped or cancelled.
 - It needs no capability beyond the existing `sample: {images: true}` and `assets`. `node tools/test-tlshot.js` runs the real code with only the model and `claude.use("assets")` stubbed.
 
+## Next stop and home
+
+Phrase cards answering “where are you going next?” in the language of the country being left, and “where are you from?” in all three. The engine is `js/nextstop.js`; it never touches the page.
+
+- **Home** is `state.home = { city, country }`, typed in English on the “About you” panel. `cleanHome()` (in `js/core.js`, called by `normalize()`) keeps a value only if it is at most 60 characters, has a Latin letter and has no local script.
+- **Legs.** `nextStopEntries(state.timeline)` is the flight, train and bus entries in date order as `{date, kind, title, where, note}`. `nextStopsPrompt(entries, home)` sends them as JSON between `<timeline>` tags (any such tags stripped) and says they are data, never instructions. It asks for `{legs:[{date, fromC, toCity, toCountry, toC}]}`. `nextStopLegs(reply)` checks the reply in code: not an object with a `legs` array is `invalid_json`; a leg is dropped if `fromC` isn’t `tw`, `kr` or `jp`, the date isn’t a real day, `toCity` is empty, over 60 characters, has no Latin letter or has local script, or it repeats an earlier `fromC` and `toCity`. An unknown `toC` becomes `""`. At most 12 legs. Returns `{legs, dropped, error}`. The view lists the legs ticked, and nothing is saved until “Make cards.”
+- **Phrases.** `nextStopPhrases(legs, home)` gives `{c, en, must, place}` for each ticked leg: “I’m going to {city} next” (or “I’m going home to {city}” when it matches the home city), plus “I’m going to {country} next” when `toC` is another course country, and “I’m from {city}” and “I’m from {country}” in all three languages. `must` is the `PLACE_NAMES[c][toC].nat` the card has to contain.
+- **Cards.** `nextStopCards(legs, home, ask, existing, hold, onStep)` first drops phrases whose English is already in the deck or hold list for that language (counted as `dupes`, no model call if nothing is left), then writes the rest in one call with six known-answer probes (`tripProbes()`, `tripProbeHits()`), then runs the local checks, the `must` check (a card without the fixed name is left out with a reason before the blind reading), the `nat` duplicate check and `checkCards()`. It returns a report shaped like `runTripChecks()`’s with `held` always empty; `applyTripReport()` saves it, so these are ordinary trip cards of kind `phrase`.
+- **`PLACE_NAMES[lang][country]`** is `{nat, rom, say}` for the six pairs where the two differ. Taiwan uses 韓國 for Korea, not 南韓; Korea uses 대만 for Taiwan. `tools/validate.js` checks the six pairs, the script and that `rom` and `say` are filled.
+- `node tools/test-nextstop.js` runs the engine with a scripted model and renders the Your trip view.
+
 ## Reading notes
 
 Short history and culture notes for the “Before you go” panel on “Your trip”.
@@ -192,11 +205,12 @@ The answer side of a study card (`renderStudy()` in `js/views/study.js`) shows w
 `state` in `js/core.js`, stored under the `localStorage` key `trip-phrasebook-v1`:
 
 ```js
-{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, more, updated, trip, hold, itin, timeline, notes, skip }
+{ start, cards: { [id]: { b, due } }, day, newDone, streak, lastDay, auto, more, updated, trip, hold, itin, timeline, notes, skip, home }
 ```
 
 - `trip`: accepted trip cards. `hold`: business names waiting for the learner to confirm. Both are lists of `{ id, c, kind, en, nat, rom, say, note }`, at most 150 each. `itin`: the text last used to build cards, at most 4,000 characters. `timeline`: see “Trip timeline.” `notes`: `{ [tripCardId]: { body, at } }`, see “Reading notes.”
 - `skip`: ids of skipped course cards, each once; `normalize()` drops anything that isn’t a course card id. Skipping keeps the card’s progress in `cards`, so bringing it back resumes it. Change it with `setSkipped(id, on)`.
+- `home`: `{ city, country }`, the learner’s home town in English, each `""` when unset. See “Next stop and home.”
 - `auto`: play the audio when an answer appears. `more`: whether “More info” on study cards was left open (only `true` counts; old data loads closed). The `toggle` listener in `js/main.js` saves it, in the capture phase since `toggle` doesn’t bubble, and only when it changed, because a card rendered already open fires `toggle` too.
 - `start`, `due`, `day`, `lastDay` are local day numbers from `today()`.
 - `b` is the review box, 1 to 5; gaps are `GAP = [0,1,2,4,8,16]` days.
@@ -223,7 +237,7 @@ The answer side of a study card (`renderStudy()` in `js/views/study.js`) shows w
 
 ## Checking your work
 
-1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js`, `test-tlshot.js`, `test-cards.js` and `test-skip.js` must pass.
+1. `node tools/validate.js` must print `OK`, and `node tools/test-trip.js`, `test-add.js`, `test-timeline.js`, `test-notes.js`, `test-partner.js`, `test-shot.js`, `test-tlshot.js`, `test-cards.js`, `test-skip.js` and `test-nextstop.js` must pass.
 2. `node tools/bundle.js` must succeed.
 3. Open `index.html` in a browser and click through every tab, in light and dark mode, at phone width.
 4. If your spec added a data file, extend `tools/validate.js` to check it, as the spec describes.
