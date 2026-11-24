@@ -137,6 +137,7 @@ async function nsRun(who,label,run){
   const stop=aiStop();
   try{const code=stop||await run();
     if(code)ns.err=aiMessage(code)}
+  catch(e){ns.err=aiMessage(tripErr(e))}
   finally{trip.busy=false;trip.who="";trip.step="";renderTrip()}}
 function findStops(){
   const entries=nextStopEntries(state.timeline);
@@ -145,7 +146,7 @@ function findStops(){
     ns.legs=null;ns.dropped=0;ns.report=null;
     try{const r=nextStopLegs(await askJSON(nextStopsPrompt(entries,state.home),"default"));
       if(r.error)return r.error;
-      ns.legs=r.legs.map(l=>Object.assign({},l,{on:true}));ns.sig=nsSig();ns.dropped=r.dropped;return ""}
+      ns.legs=r.legs.map(l=>Object.assign({},l,{on:true}));ns.sig=JSON.stringify(entries);ns.dropped=r.dropped;return ""}
     catch(e){return tripErr(e)}})}
 function makeStopCards(){
   if(trip.busy)return;
@@ -156,6 +157,7 @@ function makeStopCards(){
   return nsRun("nsmake","Getting ready.",async()=>{
     const rep=await nextStopCards(picked,state.home,askJSON,CARDS,state.hold,s=>{trip.step=TRIP_STEP[s]||"";renderTrip()});
     if(rep.error)return rep.error;
+    if(rep.full){ns.err="Not added. "+TRIP_FULL;return ""}
     if(applyTripReport(rep))session=null;
     ns.report=rep;return ""})}
 function nsAct(a){
