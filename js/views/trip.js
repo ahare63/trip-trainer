@@ -119,31 +119,102 @@ async function buildTrip(){
   if(stop)trip.err=aiMessage(stop);
   trip.busy=false;trip.who="";trip.step="";renderTrip();
 }
+/* next stop and home (js/nextstop.js): legs found in the timeline wait here, ticked, until “Make cards”. They are
+   dropped once the timeline's journeys change (sig). */
+const ns={legs:null,sig:"",dropped:0,err:"",report:null,city:null,country:null,homeMsg:""};
+const nsSig=()=>JSON.stringify(nextStopEntries(state.timeline));
+const nsLegs=()=>ns.legs&&ns.sig===nsSig()?ns.legs:null;
+const NS_HOME_HINT="Add your home city or country under “About you” to get “I’m from” cards too.";
+function saveHome(){
+  const city=String(ns.city==null?state.home.city:ns.city).trim(),country=String(ns.country==null?state.home.country:ns.country).trim();
+  const home=cleanHome({city,country});
+  if((city&&!home.city)||(country&&!home.country)){ns.homeMsg="Type the city and country in English, 60 characters at most.";renderTrip();return}
+  state.home=home;ns.city=null;ns.country=null;ns.homeMsg="Saved.";commit();renderTrip()}
+async function nsRun(who,label,run){
+  if(trip.busy)return;
+  ns.err="";trip.busy=true;trip.who=who;trip.step=label;renderTrip();
+  await aiReady;
+  const stop=aiStop();
+  try{const code=stop||await run();
+    if(code)ns.err=aiMessage(code)}
+  catch(e){ns.err=aiMessage(tripErr(e))}
+  finally{trip.busy=false;trip.who="";trip.step="";renderTrip()}}
+function findStops(){
+  const entries=nextStopEntries(state.timeline);
+  if(trip.busy||!entries.length)return;
+  return nsRun("nsfind","Reading your timeline.",async()=>{
+    ns.legs=null;ns.dropped=0;ns.report=null;
+    try{const r=nextStopLegs(await askJSON(nextStopsPrompt(entries,state.home),"default"));
+      if(r.error)return r.error;
+      ns.legs=r.legs.map(l=>Object.assign({},l,{on:true}));ns.sig=JSON.stringify(entries);ns.dropped=r.dropped;return ""}
+    catch(e){return tripErr(e)}})}
+function makeStopCards(){
+  if(trip.busy)return;
+  const picked=(nsLegs()||[]).filter(l=>l.on);
+  if(!picked.length&&!state.home.city&&!state.home.country){ns.err="Tick at least one journey, or add your home town under “About you.”";renderTrip();return}
+  if(tripFull(CARDS)){ns.err="Not added. "+TRIP_FULL;renderTrip();return}
+  ns.report=null;
+  return nsRun("nsmake","Getting ready.",async()=>{
+    const rep=await nextStopCards(picked,state.home,askJSON,CARDS,state.hold,s=>{trip.step=TRIP_STEP[s]||"";renderTrip()});
+    if(rep.error)return rep.error;
+    if(rep.full){ns.err="Not added. "+TRIP_FULL;return ""}
+    if(applyTripReport(rep))session=null;
+    ns.report=rep;return ""})}
+function nsAct(a){
+  if(a==="find"){findStops();return}
+  if(a==="make"){makeStopCards();return}
+  if(a==="home"){trip.focus="home-city";renderTrip();return}
+  if(a==="save")saveHome()}
+function homeHTML(){
+  const v=(typed,saved)=>h(typed==null?saved:typed);
+  return `<div class="panel" id="about-you"><h3>About you</h3>
+    <p class="meta" style="margin-top:6px;max-width:62ch">Where you’re from, in English. People ask everywhere, so “Make cards” below adds “I’m from…” in all three languages.</p>
+    <div class="fgrid"><label class="fld">Home city<input class="ta" id="home-city" maxlength="60" autocomplete="off" placeholder="New York" value="${v(ns.city,state.home.city)}"></label>
+      <label class="fld">Home country<input class="ta" id="home-country" maxlength="60" autocomplete="off" placeholder="the United States" value="${v(ns.country,state.home.country)}"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" data-ns="save">Save</button>${ns.homeMsg?`<span class="${ns.homeMsg==="Saved."?"good":"err"}" role="status">${h(ns.homeMsg)}</span>`:""}</div></div>`}
+function nextStopHTML(){
+  const has=nextStopEntries(state.timeline).length>0,busy=trip.busy?"disabled":"",L=nsLegs();
+  const legs=L?(L.length?`<ul class="bk-list">${L.map((l,i)=>`<li class="bk-item" data-c="${l.fromC}"><label><input type="checkbox" data-nspick="${i}"${l.on?" checked":""} ${busy}><span><span class="bk-en">Leaving ${C[l.fromC].name}: ${h(l.toCity)}${l.toCountry?", "+h(l.toCountry):""}</span><span class="meta">${h(l.date)}</span></span></label></li>`).join("")}</ul>`
+      :`<p class="meta" style="margin-top:10px">No journeys between cities were found${ns.dropped?` (${ns.dropped} left out)`:""}.</p>`)
+      +(L.length&&ns.dropped?`<p class="meta" style="margin-top:6px">${ns.dropped} left out: they leave from outside Taiwan, Korea and Japan, or couldn’t be read.</p>`:""):"";
+  return `<div class="panel" id="next-stop"><h3>Where you’re going next</h3>
+    <p class="meta" style="margin-top:6px;max-width:62ch">Check-in staff, immigration and taxi drivers ask where you’re going next. Claude reads the flights, trains and buses in your timeline, and you tick the journeys you want cards for, in the language of the country you’re leaving.</p>
+    ${has?"":`<p class="meta" style="margin-top:6px">Your timeline has no flights, trains or buses yet. Add them above, then come back.</p>`}
+    <div class="row" style="margin-top:12px"><button class="btn ghost" data-ns="find" ${has&&!trip.busy?"":"disabled"}>${trip.who==="nsfind"?"Reading…":"Find my next stops"}</button>${L&&L.length||state.home.city||state.home.country?`<button class="btn" data-ns="make" ${busy}>${trip.who==="nsmake"?"Making…":"Make cards"}</button>`:""}<span class="meta" aria-live="polite">${trip.who.startsWith("ns")?h(trip.step):""}</span></div>
+    ${legs}
+    ${state.home.city||state.home.country?"":`<p class="meta" style="margin-top:10px">${h(NS_HOME_HINT)} <button class="btn ghost small" data-ns="home">Go to About you</button></p>`}
+    ${ns.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(ns.err)}</p>`:""}</div>
+  ${tripReportHTML(ns.report,"Try again.")}`}
+/* the result of a batch run: runTripChecks() or nextStopCards(). empty says what to try when nothing came back. */
+function tripReportHTML(r,empty){
+  if(!r)return "";
+  if(!r.probes)return `<div class="panel" aria-live="polite"><h3>Nothing new to add</h3><p style="margin-top:8px">All ${r.dupes} of these cards are already in your deck.</p></div>`;
+  let rep=`<div class="panel" aria-live="polite"><h3>${r.blocked?"Nothing was added":"Result of the checks"}</h3>`;
+  if(r.blocked)rep+=`<p style="margin-top:8px;max-width:60ch">The generator got only ${r.hits} of ${r.probes} known answers right, so none of its cards were trusted. Try building again.</p>`;
+  else{
+    const passed=r.added.length+r.held.length;
+    rep+=`<ul style="padding-left:18px;margin:10px 0 0;max-width:64ch"><li>Known-answer test: ${r.hits} of ${r.probes} right.</li>
+      <li>Second-model check: ${passed} of ${r.checked} cards passed.</li>
+      <li>${r.added.length} added to your deck${r.held.length?`, ${r.held.length} waiting for you to confirm a name`:""}${r.dupes?`, ${r.dupes} already there`:""}.</li></ul>`;
+    if(!passed&&!r.out.length)rep+=`<p style="margin-top:10px">No cards came back, so nothing was added. ${empty}</p>`;
+    if(r.out.length)rep+=`<h4 style="margin:16px 0 4px">Left out</h4>${r.out.map(o=>tripEntry(o.card,"",o.why)).join("")}`;
+  }
+  rep+=`</div>`;
+  return rep}
 function tripEntry(k,acts,why){return `<div class="entry" data-c="${k.c}"><div><div class="e-en">${h(k.en)} <span class="meta" style="font-weight:400">${C[k.c].name}, ${h(k.kind)}</span></div>
   <div class="e-nat" lang="${C[k.c].hl}">${h(k.nat)}</div><div class="e-say">${h(k.say)}</div><div class="e-rom">${h(k.rom)}</div>${toneLine(k)}</div>
   ${hearBtn(k.nat,k.c)}${k.note?`<div class="e-note">${h(k.note)}</div>`:""}${why?`<div class="e-why">Left out: ${h(why)}</div>`:""}${acts?`<div class="e-acts">${acts}</div>`:""}</div>`}
 function renderTrip(){
   if(trip.text==null)trip.text=state.itin||"";
-  const r=trip.report,hand=trip.hand,quick=trip.quick;
-  let rep="";
-  if(r){
-    rep=`<div class="panel" aria-live="polite"><h3>${r.blocked?"Nothing was added":"Result of the checks"}</h3>`;
-    if(r.blocked)rep+=`<p style="margin-top:8px;max-width:60ch">The generator got only ${r.hits} of ${r.probes} known answers right, so none of its cards were trusted. Try building again.</p>`;
-    else{
-      const passed=r.added.length+r.held.length;
-      rep+=`<ul style="padding-left:18px;margin:10px 0 0;max-width:64ch"><li>Known-answer test: ${r.hits} of ${r.probes} right.</li>
-        <li>Second-model check: ${passed} of ${r.checked} cards passed.</li>
-        <li>${r.added.length} added to your deck${r.held.length?`, ${r.held.length} waiting for you to confirm a name`:""}${r.dupes?`, ${r.dupes} already there`:""}.</li></ul>`;
-      if(!passed&&!r.out.length)rep+=`<p style="margin-top:10px">No cards came back, so nothing was added. Name some places in Taiwan, Korea or Japan and try again.</p>`;
-      if(r.out.length)rep+=`<h4 style="margin:16px 0 4px">Left out</h4>${r.out.map(o=>tripEntry(o.card,"",o.why)).join("")}`;
-    }
-    rep+=`</div>`;
-  }
+  const hand=trip.hand,quick=trip.quick;
+  const rep=tripReportHTML(trip.report,"Name some places in Taiwan, Korea or Japan and try again.");
   const keyBox=AI.mode==="key"?`<div class="panel"><h3>Your Anthropic API key</h3>
     <p class="meta" style="margin-top:6px;max-width:62ch">This copy of the page runs outside Claude, so building cards needs your own API key, and each build is billed to it. The key is stored only in this browser and sent only to api.anthropic.com.</p>
     <div class="row"><input class="ta" id="trip-key" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Anthropic API key" value="${h(getKey())}" style="max-width:420px">${getKey()?`<button class="btn ghost small" data-keyclear="1">Forget this key</button>`:""}</div></div>`:"";
   $("#v-trip").innerHTML=`<h2>Your trip</h2>
   ${timelineHTML()}
+  ${homeHTML()}
+  ${nextStopHTML()}
   <p class="lede">Paste an itinerary, or just list places: hotels, restaurants, stations, neighborhoods. Claude writes cards for them, and each card has to pass the checks below before it joins your deck. Build once from your plans, then add each new booking with “Read a booking screenshot,” “Add a place by hand” or “Quick add” below. Building again rewrites cards for the whole list and can add reworded copies of ones you already have.</p>
   ${keyBox}
   <div style="margin-top:18px"><textarea class="ta" id="trip-text" aria-label="Your itinerary or list of places" maxlength="4000" ${trip.busy?"disabled":""} placeholder="Taipei, 4 nights, hotel near Zhongshan station&#10;Day trip to Jiufen&#10;Seoul, 5 nights in Hongdae&#10;KTX to Busan, staying by Haeundae Beach&#10;Tokyo, 2 nights in Asakusa">${h(trip.text)}</textarea></div>

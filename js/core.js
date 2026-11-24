@@ -3,7 +3,7 @@
 /* ---------- state ---------- */
 const KEY="trip-phrasebook-v1", NEW_PER_DAY=12, GAP=[0,1,2,4,8,16];
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)};
-function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,more:false,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{},skip:[]}}
+function blank(){return {start:today(),cards:{},day:0,newDone:0,streak:0,lastDay:0,auto:true,more:false,updated:0,trip:[],hold:[],itin:"",timeline:[],notes:{},skip:[],home:{city:"",country:""}}}
 /* a country key of C; C[c] alone would also accept inherited keys such as "constructor" */
 const isCountry=c=>typeof c==="string"&&Object.prototype.hasOwnProperty.call(C,c);
 /* trip cards: written by a model from the learner's notes, so every field is checked and capped on the way in */
@@ -46,13 +46,16 @@ const isSkipped=id=>state.skip.includes(id);
 /* the cards in play for study, plan counts and Talk: everything but skipped cards */
 const studyCards=()=>CARDS.filter(k=>!isSkipped(k.id));
 function setSkipped(id,on){state.skip=state.skip.filter(x=>x!==id);if(on)state.skip.push(id);state.skip=cleanSkip(state.skip);commit()}
+/* home town, typed in English: Latin letters, no local script, at most 60 characters each */
+const homeText=v=>typeof v==="string"&&(v=v.normalize("NFC").replace(/\s+/g," ").trim()).length<=60&&/[A-Za-z]/.test(v)&&!/[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(v)?v:"";
+const cleanHome=o=>({city:homeText(o&&o.city),country:homeText(o&&o.country)});
 function syncTrip(){
   for(let i=CARDS.length-1;i>=0;i--)if(CARDS[i].cat==="trip")CARDS.splice(i,1);
   state.trip.forEach((x,i)=>CARDS.push({id:x.id,c:x.c,wk:0,cat:"trip",kind:x.kind,en:x.en,nat:x.nat,rom:x.rom,say:x.say,note:x.note,ord:i}))}
 function normalize(s){const b=blank();if(!s||typeof s!=="object")return b;
   const trip=cleanList(s.trip);
   return {start:+s.start||b.start,cards:(s.cards&&typeof s.cards==="object")?s.cards:{},day:+s.day||0,newDone:+s.newDone||0,streak:+s.streak||0,lastDay:+s.lastDay||0,auto:s.auto!==false,more:s.more===true,updated:+s.updated||0,
-    trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip),skip:cleanSkip(s.skip)}}
+    trip,hold:cleanList(s.hold),itin:typeof s.itin==="string"?s.itin.slice(0,4000):"",timeline:cleanTimeline(s.timeline),notes:cleanNotes(s.notes,trip),skip:cleanSkip(s.skip),home:cleanHome(s.home)}}
 let state=blank();
 try{const s=localStorage.getItem(KEY);if(s)state=normalize(JSON.parse(s))}catch(e){}
 syncTrip();

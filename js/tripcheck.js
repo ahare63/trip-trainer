@@ -27,6 +27,14 @@ function tripLocalProblem(k){
   if(!k.rom||!k.say||TRIP_CJK.test(k.rom+k.say))return "Came back without a usable pronunciation.";
   return ""}
 
+/* two known-answer test items per language, and how many of them a reply {probes:[{id, nat}]} got right */
+function tripProbes(){const probes=[];
+  ["tw","kr","jp"].forEach(c=>shuffle(PROBES[c]).slice(0,2).forEach(p=>probes.push({id:"p"+probes.length,c,en:p[0],gold:p[1]})));
+  return probes}
+function tripProbeHits(probes,gen){
+  const got={};(gen&&Array.isArray(gen.probes)?gen.probes:[]).forEach(x=>{if(x&&typeof x.id==="string")got[x.id]=x.nat});
+  return probes.filter(p=>p.gold.some(g=>tripNorm(g)===tripNorm(got[p.id]))).length}
+
 function tripGenPrompt(text,probes){
   const notes=String(text).slice(0,4000).replace(/<\s*\/?\s*trip\s*>/gi," ");
   return `You write flashcards for an English-speaking traveler who is a complete beginner in Mandarin, Korean and Japanese.
@@ -94,14 +102,12 @@ Reply with a JSON array only, in this shape: [{"i":0,"ok":true,"reason":""}]`}
    error (the rejection's code, or "failed") and empty added and held. */
 async function runTripChecks(text,ask,existing,hold,onStep){
   const step=onStep||(()=>{});
-  const probes=[];
-  ["tw","kr","jp"].forEach(c=>shuffle(PROBES[c]).slice(0,2).forEach(p=>probes.push({id:"p"+probes.length,c,en:p[0],gold:p[1]})));
+  const probes=tripProbes();
   const rep={probes:probes.length,hits:0,blocked:false,added:[],held:[],out:[],dupes:0,checked:0,error:""};
   try{
     step("write");
     const gen=await ask(tripGenPrompt(text,probes),"default");
-    const got={};(gen&&Array.isArray(gen.probes)?gen.probes:[]).forEach(x=>{if(x&&typeof x.id==="string")got[x.id]=x.nat});
-    rep.hits=probes.filter(p=>p.gold.some(g=>tripNorm(g)===tripNorm(got[p.id]))).length;
+    rep.hits=tripProbeHits(probes,gen);
     rep.blocked=rep.hits<probes.length-1;
     if(rep.blocked)return rep;
     const have=tripHave(existing,hold),key=k=>k.c+"|"+tripNorm(k.nat),cand=[];
