@@ -47,7 +47,7 @@ const isSkipped=id=>state.skip.includes(id);
 const studyCards=()=>CARDS.filter(k=>!isSkipped(k.id));
 function setSkipped(id,on){state.skip=state.skip.filter(x=>x!==id);if(on)state.skip.push(id);state.skip=cleanSkip(state.skip);commit()}
 /* home town, typed in English: Latin letters, no local script, at most 60 characters each */
-const homeText=v=>typeof v==="string"&&(v=v.trim()).length<=60&&/[A-Za-z]/.test(v)&&!/[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(v)?v:"";
+const homeText=v=>typeof v==="string"&&(v=v.normalize("NFC").replace(/\s+/g," ").trim()).length<=60&&/[A-Za-z]/.test(v)&&!/[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(v)?v:"";
 const cleanHome=o=>({city:homeText(o&&o.city),country:homeText(o&&o.country)});
 function syncTrip(){
   for(let i=CARDS.length-1;i>=0;i--)if(CARDS[i].cat==="trip")CARDS.splice(i,1);

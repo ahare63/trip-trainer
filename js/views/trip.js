@@ -119,8 +119,11 @@ async function buildTrip(){
   if(stop)trip.err=aiMessage(stop);
   trip.busy=false;trip.who="";trip.step="";renderTrip();
 }
-/* next stop and home (js/nextstop.js): legs found in the timeline wait here, ticked, until “Make cards” */
-const ns={legs:null,dropped:0,err:"",report:null,city:null,country:null,homeMsg:""};
+/* next stop and home (js/nextstop.js): legs found in the timeline wait here, ticked, until “Make cards”. They are
+   dropped once the timeline's journeys change (sig). */
+const ns={legs:null,sig:"",dropped:0,err:"",report:null,city:null,country:null,homeMsg:""};
+const nsSig=()=>JSON.stringify(nextStopEntries(state.timeline));
+const nsLegs=()=>ns.legs&&ns.sig===nsSig()?ns.legs:null;
 const NS_HOME_HINT="Add your home city or country under “About you” to get “I’m from” cards too.";
 function saveHome(){
   const city=String(ns.city==null?state.home.city:ns.city).trim(),country=String(ns.country==null?state.home.country:ns.country).trim();
@@ -132,22 +135,23 @@ async function nsRun(who,label,run){
   ns.err="";trip.busy=true;trip.who=who;trip.step=label;renderTrip();
   await aiReady;
   const stop=aiStop();
-  const code=stop||await run();
-  if(code)ns.err=aiMessage(code);
-  trip.busy=false;trip.who="";trip.step="";renderTrip()}
+  try{const code=stop||await run();
+    if(code)ns.err=aiMessage(code)}
+  finally{trip.busy=false;trip.who="";trip.step="";renderTrip()}}
 function findStops(){
   const entries=nextStopEntries(state.timeline);
   if(trip.busy||!entries.length)return;
-  ns.legs=null;ns.dropped=0;ns.report=null;
   return nsRun("nsfind","Reading your timeline.",async()=>{
+    ns.legs=null;ns.dropped=0;ns.report=null;
     try{const r=nextStopLegs(await askJSON(nextStopsPrompt(entries,state.home),"default"));
       if(r.error)return r.error;
-      ns.legs=r.legs.map(l=>Object.assign({},l,{on:true}));ns.dropped=r.dropped;return ""}
+      ns.legs=r.legs.map(l=>Object.assign({},l,{on:true}));ns.sig=nsSig();ns.dropped=r.dropped;return ""}
     catch(e){return tripErr(e)}})}
 function makeStopCards(){
   if(trip.busy)return;
-  const picked=(ns.legs||[]).filter(l=>l.on);
+  const picked=(nsLegs()||[]).filter(l=>l.on);
   if(!picked.length&&!state.home.city&&!state.home.country){ns.err="Tick at least one journey, or add your home town under “About you.”";renderTrip();return}
+  if(tripFull(CARDS)){ns.err="Not added. "+TRIP_FULL;renderTrip();return}
   ns.report=null;
   return nsRun("nsmake","Getting ready.",async()=>{
     const rep=await nextStopCards(picked,state.home,askJSON,CARDS,state.hold,s=>{trip.step=TRIP_STEP[s]||"";renderTrip()});
@@ -167,14 +171,14 @@ function homeHTML(){
       <label class="fld">Home country<input class="ta" id="home-country" maxlength="60" autocomplete="off" placeholder="the United States" value="${v(ns.country,state.home.country)}"></label></div>
     <div class="row" style="margin-top:12px"><button class="btn ghost" data-ns="save">Save</button>${ns.homeMsg?`<span class="${ns.homeMsg==="Saved."?"good":"err"}" role="status">${h(ns.homeMsg)}</span>`:""}</div></div>`}
 function nextStopHTML(){
-  const has=nextStopEntries(state.timeline).length>0,busy=trip.busy?"disabled":"",L=ns.legs;
+  const has=nextStopEntries(state.timeline).length>0,busy=trip.busy?"disabled":"",L=nsLegs();
   const legs=L?(L.length?`<ul class="bk-list">${L.map((l,i)=>`<li class="bk-item" data-c="${l.fromC}"><label><input type="checkbox" data-nspick="${i}"${l.on?" checked":""} ${busy}><span><span class="bk-en">Leaving ${C[l.fromC].name}: ${h(l.toCity)}${l.toCountry?", "+h(l.toCountry):""}</span><span class="meta">${h(l.date)}</span></span></label></li>`).join("")}</ul>`
       :`<p class="meta" style="margin-top:10px">No journeys between cities were found${ns.dropped?` (${ns.dropped} left out)`:""}.</p>`)
       +(L.length&&ns.dropped?`<p class="meta" style="margin-top:6px">${ns.dropped} left out: they leave from outside Taiwan, Korea and Japan, or couldn’t be read.</p>`:""):"";
   return `<div class="panel" id="next-stop"><h3>Where you’re going next</h3>
     <p class="meta" style="margin-top:6px;max-width:62ch">Check-in staff, immigration and taxi drivers ask where you’re going next. Claude reads the flights, trains and buses in your timeline, and you tick the journeys you want cards for, in the language of the country you’re leaving.</p>
     ${has?"":`<p class="meta" style="margin-top:6px">Your timeline has no flights, trains or buses yet. Add them above, then come back.</p>`}
-    <div class="row" style="margin-top:12px"><button class="btn ghost" data-ns="find" ${has&&!trip.busy?"":"disabled"}>${trip.who==="nsfind"?"Reading…":"Find my next stops"}</button>${L||state.home.city||state.home.country?`<button class="btn" data-ns="make" ${busy}>${trip.who==="nsmake"?"Making…":"Make cards"}</button>`:""}<span class="meta" aria-live="polite">${trip.who.startsWith("ns")?h(trip.step):""}</span></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" data-ns="find" ${has&&!trip.busy?"":"disabled"}>${trip.who==="nsfind"?"Reading…":"Find my next stops"}</button>${L&&L.length||state.home.city||state.home.country?`<button class="btn" data-ns="make" ${busy}>${trip.who==="nsmake"?"Making…":"Make cards"}</button>`:""}<span class="meta" aria-live="polite">${trip.who.startsWith("ns")?h(trip.step):""}</span></div>
     ${legs}
     ${state.home.city||state.home.country?"":`<p class="meta" style="margin-top:10px">${h(NS_HOME_HINT)} <button class="btn ghost small" data-ns="home">Go to About you</button></p>`}
     ${ns.err?`<p class="err" role="alert" style="margin-top:10px;max-width:62ch">${h(ns.err)}</p>`:""}</div>
